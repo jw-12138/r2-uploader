@@ -1,0 +1,142 @@
+@tailwind utilities;
+
+#app {
+  @apply p-6 mx-auto;
+}
+
+a {
+  @apply text-blue-500 dark:text-blue-400;
+}
+
+a[target="_blank"]:after {
+  @apply text-black text-sm dark:text-white;
+  content: "↗";
+}
+
+p {
+  line-height: 1.5;
+  font-size: .8rem;
+}
+
+code {
+  @apply dark:bg-neutral-600 dark:text-neutral-200;
+}
+
+table thead td {
+  font-size: .8rem;
+}
+
+table tbody td {
+  font-size: .8rem;
+}
+
+.notifications {
+  position: fixed;
+  @apply top-0 right-0 p-4 w-60 z-50;
+}
+
+.notifications .item {
+  @apply
+  shadow-xl
+  border-gray-500
+  rounded-lg
+  p-4
+  mb-4
+  bg-white
+  dark:bg-neutral-800
+  dark:border-neutral-600
+  dark:text-gray-200;
+}
+
+.notifications .item.in {
+  animation: slideInRight-enter .3s ease forwards;
+}
+
+.notifications .item.out {
+  animation: slideInRight-leave .3s ease forwards;
+}
+
+.notifications .item.flat {
+  transform: translateX(150%);
+  @apply p-0 m-0 opacity-0 h-0;
+}
+
+@keyframes slideInRight-enter {
+  0% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight-leave {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+.progress-bar {
+  @apply fixed top-0 left-0 w-full z-50 pointer-events-none;
+}
+
+.progress-bar .light {
+  background-image: linear-gradient(to right, transparent, dodgerblue, mediumpurple, transparent);
+  @apply w-4/5 h-1 absolute left-0 top-0;
+  animation: laser .6s ease-in-out infinite;
+}
+
+@keyframes laser {
+  0% {
+    left: -100%
+  }
+
+  100% {
+    left: 100%
+  }
+}
+
+.progress-bar .bg {
+  @apply transition-all opacity-0 bg-black dark:bg-white w-0 h-1 overflow-hidden relative;
+}
+
+details {
+  border: none;
+}
+
+details summary::after {
+  display: inline-block;
+  position: relative;
+  top: .1rem;
+  float: none;
+}
+
+td, th {
+  border-bottom: none;
+}
+
+table thead td {
+  @apply bg-black bg-opacity-5 py-3 dark:bg-white dark:bg-opacity-5;
+}
+
+table thead td:first-child {
+  @apply rounded-tl-xl rounded-bl-xl;
+}
+
+table thead td:last-child {
+  @apply rounded-tr-xl rounded-br-xl;
+}
+
+table tbody:before {
+  content: "@";
+  display: block;
+  line-height: .5rem;
+  text-indent: -99999px;
+}
+
+table tbody td {
+  @apply px-4 py-2
+}

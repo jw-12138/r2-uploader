@@ -1,0 +1,80 @@
+:root{
+  --form-element-spacing-vertical: .5rem;
+  --form-element-spacing-horizontal: 1rem;
+  --border-radius: .5rem;
+}
+
+h1 {
+  font-family: 'Koulen', sans-serif;
+}
+
+details {
+  border: none;
+}
+
+details summary::after{
+  display: inline-block;
+  position: relative;
+  top: .2rem;
+  float: none;
+}
+
+/* Blue Light scheme (Default) */
+/* Can be forced with data-theme="light" */
+[data-theme="light"],
+:root:not([data-theme="dark"]) {
+  --primary: #151515;
+  --color: #000;
+  --primary-hover: #424242;
+  --primary-focus: rgba(0, 0, 0, 0.12);
+  --primary-inverse: #FFF;
+  --font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu", "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --modal-overlay-background-color: rgba(255,255,255,.5)
+}
+
+/* Blue Dark scheme (Auto) */
+/* Automatically enabled if user has Dark mode enabled */
+@media only screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color: #fff;
+    --background-color: #121212;
+    --primary: #ffffff;
+    --primary-hover: #f3f3f3;
+    --primary-focus: rgba(255, 255, 255, 0.5);
+    --primary-inverse: #000000;
+    --card-background-color: #232323;
+    --form-element-border-color: #555;
+    --form-element-background-color: #333;
+    --font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu", "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --secondary: hsl(0deg 0% 78%);
+    --secondary-hover: hsl(0deg 0% 91%);
+    --secondary-focus: rgb(152 152 152 / 25%);
+    --secondary-inverse: #fff;
+    --muted-color: hsl(0deg 0% 55%);
+    --muted-border-color: #616161;
+    --card-sectionning-background-color: #333;
+    --modal-overlay-background-color: rgba(0,0,0,.5)
+  }
+
+  [type=checkbox]:checked, [type=checkbox]:checked:active, [type=checkbox]:checked:focus, [type=radio]:checked, [type=radio]:checked:active, [type=radio]:checked:focus{
+    background-color: transparent;
+  }
+}
+
+@media (min-width: 992px) {
+  :root {
+    --font-size: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --font-size: 16px;
+  }
+}
+
+@media (min-width: 576px) {
+  :root {
+    --font-size: 16px;
+  }
+}
