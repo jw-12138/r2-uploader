@@ -13,7 +13,7 @@
           </span>
           </div>
           <div v-show="endPointList.length === 0" class="text-sm">
-            You need Cloudflare Workers to upload files to Cloudflare R2. Check out the
+            You need Cloudflare Workers to upload files to Cloudflare R2. Have a look with the
             <a href="javascript:" class="underline">setup guide</a>.
           </div>
           <div v-for="item in endPointList" class="flex mt-2">
@@ -24,20 +24,32 @@
                     style="padding: 0; border: 0" @click="deleteThisEndPoint(item.endPoint)">Delete
             </button>
           </div>
+          <div class="opacity-60 text-xs mt-4">
+            To edit an endpoint, just refill the form below with the same endpoint and save it again.
+          </div>
         </form>
       </article>
       <article>
         <form class="mb-0" action="javascript:" @submit="saveApiInfo">
           <div class="pb-2 text-xs opacity-80">
-            Add new endpoint
+            Add a new endpoint
           </div>
           <div>
-            <label for="" class="text-sm">Endpoint</label>
+            <label for="" class="text-sm">Workers Endpoint</label>
             <input type="text" placeholder="https://..." v-model="newEndpoint" class="text-xs" required>
           </div>
           <div>
-            <label for="" class="text-sm">API key</label>
-            <input type="password" placeholder="" v-model="newApiKey" required>
+            <label for="api_key" class="text-sm">Workers Endpoint API Key</label>
+            <input type="password" placeholder="Super Secret" v-model="newApiKey" required id="api_key" class="text-xs">
+          </div>
+          <div>
+            <label for="custom_domain" class="text-sm">Custom Domain</label>
+            <input type="text" placeholder="Optional, no need for the https://, just the domain" v-model="newCustomDomain" id="custom_domain"
+                   style="margin-bottom: .5rem" class="text-xs">
+            <div class="opacity-70 text-xs leading-4 mb-8">
+              Use your own domain name to access the files instead of <code
+              class="text-black dark:text-white">&lt;bucket&gt;.&lt;user&gt;.workers.dev</code>.
+            </div>
           </div>
           <div class="text-center mt-4">
             <button class="inline-block w-auto text-sm mb-0" :disabled="btnDisabled" type="submit">
@@ -63,9 +75,11 @@ let btnText = ref('Save To LocalStorage')
 let btnDisabled = ref(false)
 let endPointList = ref([])
 let panelOpen = ref('1')
+let customDomain = ref('')
 
 let newEndpoint = ref('')
 let newApiKey = ref('')
+let newCustomDomain = ref('')
 
 
 const restoreEndPointList = function () {
@@ -86,9 +100,11 @@ const deleteThisEndPoint = function (endpoint) {
   if (endPointList.value.length === 0) {
     localStorage.removeItem('endPoint')
     localStorage.removeItem('apiKey')
+    localStorage.removeItem('customDomain')
 
     endPoint.value = ''
     apiKey.value = ''
+    customDomain.value = ''
 
     statusStore.endPointUpdated += 1
   } else {
@@ -99,6 +115,7 @@ const deleteThisEndPoint = function (endpoint) {
 const restoreSavedApiInfo = function () {
   endPoint.value = localStorage.getItem('endPoint') || ''
   apiKey.value = localStorage.getItem('apiKey') || ''
+  customDomain.value = localStorage.getItem('customDomain') || ''
 }
 
 let updateCurrentEndPoint = function (endpoint) {
@@ -106,9 +123,11 @@ let updateCurrentEndPoint = function (endpoint) {
 
   endPoint.value = item.endPoint
   apiKey.value = item.apiKey
+  customDomain.value = item.customDomain || ''
 
   localStorage.setItem('endPoint', item.endPoint)
   localStorage.setItem('apiKey', item.apiKey)
+  localStorage.setItem('customDomain', item.customDomain || '')
   statusStore.endPointUpdated += 1
 }
 
@@ -121,10 +140,42 @@ const saveApiInfo = function () {
     return
   }
 
-  endPointList.value.push({
-    endPoint: newEndpoint.value,
-    apiKey: newApiKey.value
-  })
+  if (newEndpoint.value[newEndpoint.value.length - 1] !== '/') {
+    newEndpoint.value += '/'
+  }
+
+  if (newCustomDomain.value !== '') {
+    newCustomDomain.value = 'https://' + newCustomDomain.value
+    let customDomainUrl
+    try {
+      customDomainUrl = new URL(newCustomDomain.value)
+    } catch (e) {
+      alert('Invalid custom domain format, it should be a valid URL.')
+      return
+    }
+
+    if (newCustomDomain.value[newCustomDomain.value.length - 1] !== '/') {
+      newCustomDomain.value += '/'
+    }
+  }
+
+  // check for duplicate
+  let duplicate = endPointList.value.find(item => item.endPoint === newEndpoint.value)
+
+  // if duplicated, update the apiKey and customDomain
+  if (duplicate) {
+    duplicate.apiKey = newApiKey.value
+    duplicate.customDomain = newCustomDomain.value
+    endPointList.value = endPointList.value.filter(item => item.endPoint !== newEndpoint.value)
+    endPointList.value.push(duplicate)
+  } else {
+    endPointList.value.push({
+      endPoint: newEndpoint.value,
+      apiKey: newApiKey.value,
+      customDomain: newCustomDomain.value
+    })
+  }
+
 
   localStorage.setItem('endPointList', JSON.stringify(endPointList.value))
 
@@ -137,6 +188,7 @@ const saveApiInfo = function () {
 
   newEndpoint.value = ''
   newApiKey.value = ''
+  newCustomDomain.value = ''
 
   setTimeout(() => {
     btnText.value = 'Save To LocalStorage'

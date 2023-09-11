@@ -50,7 +50,7 @@
               width: selectMode ? 'calc(100% - 2rem)' : 'calc(100% - 5rem)'
             }">
               <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap">
-                <a :href=" 'https://blog-r2.jw1.dev/' + item.key " target="_blank" v-show="!selectMode">{{ item.fileName }}</a>
+                <a :href=" customDomain + item.key " target="_blank" v-show="!selectMode">{{ item.fileName }}</a>
                 <label v-show="selectMode" :for="item.key" class="mb-0">{{ item.fileName }}</label>
               </div>
             </div>
@@ -81,9 +81,13 @@ let selectMode = ref(false)
 
 let endPoint = localStorage.getItem('endPoint')
 let apiKey = localStorage.getItem('apiKey')
+let customDomain = localStorage.getItem('customDomain') ? localStorage.getItem('customDomain') + '/' : localStorage.getItem('endPoint')
 
 watch(uploading, (newVal) => {
   if (!newVal) {
+    endPoint = localStorage.getItem('endPoint')
+    apiKey = localStorage.getItem('apiKey')
+    customDomain = localStorage.getItem('customDomain') ? localStorage.getItem('customDomain') + '/' : localStorage.getItem('endPoint')
     loadData()
   }
 })
