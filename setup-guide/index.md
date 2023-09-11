@@ -153,7 +153,7 @@ Now you can upload and manage your files in the R2 bucket!
 
 <span style="font-size: 2rem">🎉</span>
 
-R2 Uploader does not store your Endpoints or API keys in the cloud, it is stored in your browser's LocalStorage, which means it is only accessible by you.
+R2 Uploader **does not** store your Endpoints or API keys in the cloud, it is stored in your browser's LocalStorage, which means it is only accessible by you. All the traffic goes through the Worker and the R2 bucket you just created.
 
 ### Set up a custom domain 🌐
 
