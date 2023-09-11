@@ -17,7 +17,7 @@
   </div>
 
   <footer class="text-center text-xs py-[2rem]">
-    Made by <a href="https://github.com/jw-12138">jw-12138</a> with ❤️
+    <span>Made by <a href="https://github.com/jw-12138">jw-12138</a> with ❤️ | <a href="/setup-guide/">Setup Guide</a></span>
   </footer>
 </template>
 
