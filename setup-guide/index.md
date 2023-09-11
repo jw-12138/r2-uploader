@@ -125,9 +125,17 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
    </details>
 
 6. Now click on the "Save and Deploy" button, you will see a URL on top of the page, copy it to somewhere like a notepad, **we will need it later**.
-7. You will be redirected to the "Workers" page, go to the "Settings" and then click the "Variable" on the left side.
+7. Go to the worker page, go to the "Settings" and then click the "Variable" on the left side.
+
+   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/r2_page.png)
+
 8. First we focus on the "Environment Variables" section, we need to add a key value pair for the Worker to read as a configuration. Click on the "Add variable" button, and then enter the variable name as "AUTH_KEY_SECRET" and the value is a random string, you can generate one [here](https://www.avast.com/random-password-generator), click "Save and deploy". Remember to save the value somewhere, **we will need it later**.
+ 
+   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/workers_api_key_setup.png)
+
 9. Now we scroll down to the "R2 Bucket Bindings" section, click on the "Add binding" button, and then enter the variable name as "R2_BUCKET" and the value is the name of the bucket you created earlier, click "Save and deploy".
+
+   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/r2_bindings_to_worker.png)
 
 Now we have set up the worker, we can now set up the uploader.
 
@@ -135,13 +143,17 @@ Now we have set up the worker, we can now set up the uploader.
 
 Phew, we've come a long way, now we are going to set up the uploader, which is the web interface for the R2 bucket.
 
+![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/uploader_web_interface.png)
+
 Remember the Worker URL and the random string we saved earlier? We will need them now.
 
-In R2 Uploader, we call the Worker URL as the "Endpoint" and the random string as the "API Key". You can ignore the custom domain for now and click "Save to LocalStorage".
+In R2 Uploader, we call the Worker URL as the "Endpoint" and the random string as the "API Key". Enter the Endpoint and the API key, ignore the custom domain for now and click "Save to LocalStorage".
 
 Now you can upload and manage your files in the R2 bucket!
 
 <span style="font-size: 2rem">🎉</span>
+
+R2 Uploader does not store your Endpoints or API keys in the cloud, it is stored in your browser's LocalStorage, which means it is only accessible by you.
 
 ### Set up a custom domain 🌐
 
