@@ -5,12 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build:setup": "bun run setup-guide/gen_markdown.js",
+    "build": "vite build; mkdir -p dist/setup-guide; cp -r setup-guide/* dist/setup-guide/",
+    "preview": "vite preview",
+    "deploy": "yarn build:setup; vercel --prod",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "autoprefixer": "^10.4.15",
     "axios": "^1.5.0",
+    "bun-types": "^1.0.1",
+    "marked": "^9.0.0",
     "pinia": "^2.1.6",
     "postcss": "^8.4.29",
     "sass": "^1.66.1",

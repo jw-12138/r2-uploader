@@ -14,7 +14,7 @@
           </div>
           <div v-show="endPointList.length === 0" class="text-sm">
             You need Cloudflare Workers to upload files to Cloudflare R2. Have a look with the
-            <a href="javascript:" class="underline">setup guide</a>.
+            <a href="/setup-guide/" class="underline">setup guide</a>.
           </div>
           <div v-for="item in endPointList" class="flex mt-2">
             <input type="radio" name="current_endpoint" :id="item.endPoint" :checked="item.endPoint === endPoint"
@@ -24,7 +24,7 @@
                     style="padding: 0; border: 0" @click="deleteThisEndPoint(item.endPoint)">Delete
             </button>
           </div>
-          <div class="opacity-60 text-xs mt-4">
+          <div class="opacity-60 text-xs mt-4" v-show="endPointList.length !== 0">
             To edit an endpoint, just refill the form below with the same endpoint and save it again.
           </div>
         </form>
