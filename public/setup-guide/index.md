@@ -10,7 +10,7 @@ In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing
 - Cloudflare R2 Subscription (has a free quota)
 - Cloudflare Workers Subscription (free plan would be enough)
 
-![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/dashboard.png)
+![](https://r2-cf-api.jw1.dev/dashboard.png)
 
 ### Set up the R2 bucket 📦
 
@@ -127,15 +127,15 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
 6. Now click on the "Save and Deploy" button, you will see a URL on top of the page, copy it to somewhere like a notepad, **we will need it later**.
 7. Go to the worker page, go to the "Settings" and then click the "Variable" on the left side.
 
-   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/r2_page.png)
+   ![](https://r2-cf-api.jw1.dev/r2_page.png)
 
 8. First we focus on the "Environment Variables" section, we need to add a key value pair for the Worker to read as a configuration. Click on the "Add variable" button, and then enter the variable name as "AUTH_KEY_SECRET" and the value is a random string, you can generate one [here](https://www.avast.com/random-password-generator), click "Save and deploy". Remember to save the value somewhere, **we will need it later**.
 
-   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/workers_api_key_setup.png)
+   ![](https://r2-cf-api.jw1.dev/workers_api_key_setup.png)
 
 9. Now we scroll down to the "R2 Bucket Bindings" section, click on the "Add binding" button, and then enter the variable name as "R2_BUCKET" and the value is the name of the bucket you created earlier, click "Save and deploy".
 
-   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/r2_bindings_to_worker.png)
+   ![](https://r2-cf-api.jw1.dev/r2_bindings_to_worker.png)
 
 If you go to the Worker URL now, you will see a "Object Not Found" message, that means the worker is working as expected.
 
@@ -145,7 +145,7 @@ Now we have set up the worker, we can now set up the uploader.
 
 Phew, we've come a long way, now we are going to set up the uploader, which is the web interface for the R2 bucket.
 
-![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/eFeFgOgn_bXLbpYs.png)
+![](https://r2-cf-api.jw1.dev/eFeFgOgn_bXLbpYs.png)
 
 Remember the Worker URL and the random string we saved earlier? We will need them now.
 
@@ -153,7 +153,7 @@ In R2 Uploader, we call the Worker URL as the "Endpoint" and the random string a
 
 Now you can upload and manage your files in the R2 bucket!
 
-![upload files with the uploader](https://worker-shrill-water-2ae4.jw1dev.workers.dev/p3eqM3JOpcDfzXdi.png)
+![upload files with the uploader](https://r2-cf-api.jw1.dev/p3eqM3JOpcDfzXdi.png)
 
 <span style="font-size: 2rem">🎉</span>
 
@@ -194,7 +194,7 @@ Workers and R2 both supports custom domain, and we just need one of them to make
 
    Attention! This time, instead of changing the Endpoint field in the R2 Uploader, we change the Custom Domain field with the R2 custom domain.
 
-   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/endpoint.png)
+   ![](https://r2-cf-api.jw1.dev/endpoint.png)
 
 ### Hidden features 😜
 
