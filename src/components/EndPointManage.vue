@@ -102,8 +102,11 @@ let editThisEndpoint = function (endpoint) {
   newEndpoint.value = endpoint
   newApiKey.value = endPointList.value.find(item => item.endPoint === endpoint).apiKey
   newCustomDomain.value = endPointList.value.find(item => item.endPoint === endpoint).customDomain || ''
-  let customDomainUrl = new URL(newCustomDomain.value)
-  newCustomDomain.value = customDomainUrl.hostname
+
+  if (newCustomDomain.value !== '') {
+    let customDomainUrl = new URL(newCustomDomain.value)
+    newCustomDomain.value = customDomainUrl.hostname
+  }
 
   editingEndpoint.value = endpoint
 
@@ -213,8 +216,6 @@ const saveApiInfo = function () {
     duplicate.customDomain = newCustomDomain.value
     endPointList.value = endPointList.value.filter(item => item.endPoint !== newEndpoint.value)
     endPointList.value.push(duplicate)
-    editingEndpoint.value = ''
-    animateText(endpointActionText, 'Add a new endpoint')
   } else {
     endPointList.value.push({
       endPoint: newEndpoint.value,
@@ -222,6 +223,9 @@ const saveApiInfo = function () {
       customDomain: newCustomDomain.value
     })
   }
+
+  editingEndpoint.value = ''
+  animateText(endpointActionText, 'Add a new endpoint')
 
 
   localStorage.setItem('endPointList', JSON.stringify(endPointList.value))

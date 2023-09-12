@@ -97,7 +97,7 @@
                 class="w-full overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 <a
-                  :href="customDomain + item.key"
+                  :href="(customDomain ? customDomain : endPoint) + item.key"
                   target="_blank"
                   v-show="!selectMode"
                   >{{ item.fileName }}</a
@@ -205,8 +205,6 @@ let selectMode = ref(false)
 let endPoint = localStorage.getItem('endPoint')
 let apiKey = localStorage.getItem('apiKey')
 let customDomain = localStorage.getItem('customDomain')
-  ? localStorage.getItem('customDomain') + '/'
-  : localStorage.getItem('endPoint')
 
 watch(uploading, (newVal) => {
   if (!newVal) {
