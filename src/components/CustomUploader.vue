@@ -118,7 +118,7 @@
               id="renameFileWithRandomId"
             />
             <label class="text-xs" for="renameFileWithRandomId"
-              >Rename File with Random ID</label
+              >Rename each file with a random ID</label
             >
           </div>
         </div>
