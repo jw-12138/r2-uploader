@@ -25,7 +25,7 @@
         <div>
           <div class="text-xs mb-4" v-show="!hasEncryptionPassword">
             Since now you've logged in, you can sync your endpoints across devices. But first, you need to provide a
-            password to encrypt or decrypt your data. Remember, this password will be stored locally and will not be
+            password to encrypt and decrypt your data. Remember, this password will be stored locally and will not be
             sent to our
             server. Meaning <b>if you forget it, you'll lose all previously saved data</b>.
           </div>
