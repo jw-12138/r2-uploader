@@ -29,18 +29,18 @@
             sent to our
             server. Meaning <b>if you forget it, you'll lose all previously saved data</b>.
           </div>
-          <div class="text-xs mb-4" v-show="hasEncryptionPassword">
-            <span class="text-red-500">Notice:</span> Updating your password will instantly push and overwrite your data
-            on our server.
-          </div>
           <form action="javascript:" @submit="saveEncryptionPassword">
             <label for="en_password" class="text-sm">Encryption/Decryption Password</label>
             <div class="flex">
-              <input type="password" id="en_password" min="16" required v-model="encryptionPassword"
+              <input class="mb-0" type="password" id="en_password" min="16" required v-model="encryptionPassword" v-if="!showPassword"
                      @focus="encryptionPasswordInputFocus = true" @blur="encryptionPasswordInputFocus = false">
+              <input class="mb-0" type="text" id="en_password" min="16" required v-model="encryptionPassword" v-else>
               <button class="shrink-0 text-xs outline inline-block w-auto ml-2" type="submit">
                 {{ hasEncryptionPassword ? 'Update' : 'Save' }}
               </button>
+            </div>
+            <div>
+              <input type="checkbox" v-model="showPassword" id="show_password"> <label for="show_password" class="text-xs">Show password</label>
             </div>
 
           </form>
@@ -73,9 +73,12 @@ import AES from 'crypto-js/aes'
 import {useStatusStore} from '../store/status'
 let statusStore = useStatusStore()
 import * as encoding from 'crypto-js/enc-utf8'
+import {animateText} from '../utils/animateText.js'
 
 let isDark = ref(false)
 let GITHUB_CLIENT_ID = '8318b6fc09ace8ab9747'
+
+let showPassword = ref(false)
 
 let getWindowTheme = () => {
   isDark.value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -101,12 +104,6 @@ let encryptionPasswordInputFocus = ref(false)
 let saveEncryptionPassword = () => {
   localStorage.setItem('encryption_password', encryptionPassword.value)
 
-  // update
-  if (hasEncryptionPassword.value) {
-    syncMyData()
-    return false
-  }
-
   // first time
   if (localStorage.getItem('encryptedEndpointList')) {
     let decryptedData = decryptData(localStorage.getItem('encryptedEndpointList'))
@@ -114,7 +111,7 @@ let saveEncryptionPassword = () => {
     statusStore.endPointUpdated += 1
     localStorage.removeItem('encryptedEndpointList')
 
-    sync_status.value = 'decrypted and saved'
+    animateText(sync_status, 'decrypted and saved')
   }
 
   hasEncryptionPassword.value = true
@@ -167,7 +164,7 @@ let syncMyData = async function () {
   let encryptedData = encryptData(endPointList)
   let apiEndpoint = '/api/sync_config'
 
-  sync_status.value = 'pushing...hold on'
+  animateText(sync_status, 'pushing...hold on')
 
   syncingMyData.value = true
   let req = await fetch(apiEndpoint, {
@@ -184,18 +181,18 @@ let syncMyData = async function () {
   syncingMyData.value = false
 
   if (req.status !== 200) {
-    sync_status.value = 'push failed'
+    animateText(sync_status, 'push failed')
     return false
   }
 
-  sync_status.value = 'pushed'
+  animateText(sync_status, 'pushed')
 }
 
 let pullingMyData = ref(false)
 let pullMyData = async function () {
   let apiEndpoint = '/api/pull_config'
 
-  sync_status.value = 'pulling...hold on'
+  animateText(sync_status, 'pulling...hold on')
 
   pullingMyData.value = true
   let req = await fetch(apiEndpoint, {
@@ -209,7 +206,7 @@ let pullMyData = async function () {
   pullingMyData.value = false
 
   if (req.status !== 200) {
-    sync_status.value = 'pull failed'
+    animateText(sync_status, 'pull failed')
     return false
   }
 
@@ -218,7 +215,7 @@ let pullMyData = async function () {
   if (!hasEncryptionPassword.value) {
     localStorage.setItem('encryptedEndpointList', data.config)
 
-    sync_status.value = 'pulled, insert your password to decrypt the data'
+    animateText(sync_status, 'pulled, insert your password to decrypt the data')
 
     return false
   }
@@ -226,14 +223,21 @@ let pullMyData = async function () {
   let decryptedData = decryptData(data.config)
 
   if (decryptedData === '') {
-    sync_status.value = 'pulled, but found nothing'
+    animateText(sync_status, 'pulled, but found nothing')
     return false
   }
 
   let currentEndpointList = localStorage.getItem('endPointList')
   let currentEndpointListJson = JSON.parse(currentEndpointList)
 
-  let remoteEndpointListJson = JSON.parse(decryptedData)
+  let remoteEndpointListJson
+
+  try {
+    remoteEndpointListJson = JSON.parse(decryptedData)
+  } catch (e) {
+    animateText(sync_status, 'pulled, but the data seems to be corrupted, check your password please')
+    return false
+  }
 
   let mergedEndpointList = [...currentEndpointListJson, ...remoteEndpointListJson]
 
@@ -243,7 +247,7 @@ let pullMyData = async function () {
 
   localStorage.setItem('endPointList', JSON.stringify(mergedEndpointList))
 
-  sync_status.value = 'pulled'
+  animateText(sync_status, 'pulled')
 
   statusStore.endPointPulled += 1
 }
@@ -263,7 +267,7 @@ let deleteMyData = async function () {
   }
 
   deletingMyData.value = true
-  sync_status.value = 'deleting...hold on'
+  animateText(sync_status, 'deleting...hold on')
   let apiEndpoint = '/api/delete_config'
 
   let req = await fetch(apiEndpoint, {
@@ -277,9 +281,9 @@ let deleteMyData = async function () {
   deletingMyData.value = false
 
   if (req.status === 204) {
-    sync_status.value = 'all deleted'
+    animateText(sync_status, 'deleted')
   } else {
-    sync_status.value = 'delete Failed, try again please'
+    animateText(sync_status, 'delete Failed, try again please')
   }
 }
 
@@ -358,7 +362,7 @@ let cleanSyncStatusTimeout = null
 watch(sync_status, val => {
   clearTimeout(cleanSyncStatusTimeout)
   cleanSyncStatusTimeout = setTimeout(() => {
-    sync_status.value = 'waiting for user action'
-  }, 5000)
+    animateText(sync_status, 'waiting for user action')
+  }, 10000)
 })
 </script>

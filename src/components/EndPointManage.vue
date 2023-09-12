@@ -77,6 +77,7 @@ import {onMounted, ref, watch} from 'vue'
 import {useStatusStore} from '../store/status'
 import SyncEndpoints from './syncEndpoints.vue'
 import { storeToRefs } from 'pinia'
+import {animateText} from '../utils/animateText.js'
 
 let statusStore = useStatusStore()
 let { endPointPulled } = storeToRefs(statusStore)
@@ -117,22 +118,6 @@ let editThisEndpoint = function (endpoint) {
   editingEndpoint.value = endpoint
 
   animateText(endpointActionText, 'Edit this endpoint')
-}
-
-let animateText = function (refVariable, targetText, options) {
-  let {interval = 20, skipText = ''} = options || {}
-  refVariable.value = '' + skipText
-
-  let length = targetText.length
-
-  let s = setInterval(function () {
-    if (refVariable.value.length === length) {
-      clearInterval(s)
-      return false
-    }
-
-    refVariable.value += targetText[refVariable.value.length]
-  }, interval)
 }
 
 
