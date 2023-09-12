@@ -1,22 +1,33 @@
-// vercel edge
+// GitHub oauth callback handler
+// running on vercel edge
 
 export const config = {
   runtime: 'edge',
 }
 
 export default async function (req, res) {
-  let { code } = req.query
-  let redirect = req.query.r
+  let requestUrl = new URL(req.url)
+  let query = requestUrl.searchParams
 
-  if (req.query.error) {
-    return res.status(400).json({
-      error: req.query.error
+  let code = query.get('code')
+  let redirect = query.get('r')
+  // decode redirect url
+  redirect = redirect ? decodeURIComponent(redirect) : null
+
+  let error = query.get('error')
+  let error_description = query.get('error_description')
+
+  error_description = error_description ? error_description.replace(/\+/g, ' ') : ''
+
+  if (error) {
+    return new Response(error + '\n' + error_description, {
+      status: 400
     })
   }
 
   if (!code) {
-    return res.status(400).json({
-      message: 'no_code'
+    return new Response('no code', {
+      status: 400
     })
   }
 
@@ -35,7 +46,7 @@ export default async function (req, res) {
 			},
 			body: JSON.stringify({
 				client_id: process.env.GITHUB_CLIENT_ID,
-				client_secret: process.env.GITHUB_SECRET,
+				client_secret: process.env.GITHUB_CLIENT_SECRET,
 				code: code
 			})
 		})

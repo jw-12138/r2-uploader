@@ -5,6 +5,7 @@ export const useStatusStore = defineStore('status', {
     return {
       uploading: false,
       endPointUpdated: 0,
+      endPointPulled: 0,
       uploadedFiles: []
     }
   }

@@ -17,7 +17,7 @@
             <a href="/setup-guide/" class="underline">setup guide</a>.
           </div>
           <div v-for="item in endPointList" class="flex mt-2">
-            <input type="radio" name="current_endpoint" :id="item.endPoint" :checked="item.endPoint === endPoint"
+            <input type="radio" name="current_endpoint" :id="item.endPoint" :data-id="item.endPoint" :checked="item.endPoint === endPoint"
                    @change="updateCurrentEndPoint(item.endPoint)" class="w-[2rem] shrink-0"><label
             :for="item.endPoint" class="text-xs w-full">{{ item.endPoint }}</label>
 
@@ -64,16 +64,22 @@
           </div>
         </form>
       </article>
+      <article>
+        <sync-endpoints></sync-endpoints>
+      </article>
     </details>
 
   </div>
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
+import {onMounted, ref, watch} from 'vue'
 import {useStatusStore} from '../store/status'
+import SyncEndpoints from './syncEndpoints.vue'
+import { storeToRefs } from 'pinia'
 
 let statusStore = useStatusStore()
+let { endPointPulled } = storeToRefs(statusStore)
 
 let endPoint = ref('')
 let apiKey = ref('')
@@ -216,6 +222,10 @@ const saveApiInfo = function () {
     duplicate.customDomain = newCustomDomain.value
     endPointList.value = endPointList.value.filter(item => item.endPoint !== newEndpoint.value)
     endPointList.value.push(duplicate)
+
+    if (endPoint.value === newEndpoint.value) {
+      updateCurrentEndPoint(newEndpoint.value)
+    }
   } else {
     endPointList.value.push({
       endPoint: newEndpoint.value,
@@ -226,7 +236,6 @@ const saveApiInfo = function () {
 
   editingEndpoint.value = ''
   animateText(endpointActionText, 'Add a new endpoint')
-
 
   localStorage.setItem('endPointList', JSON.stringify(endPointList.value))
 
@@ -261,6 +270,25 @@ function restorePanelOpenStatus() {
     panelOpen.value = '0'
   }
 }
+
+watch(endPointList, val => {
+  localStorage.setItem('localEndpointListUpdateTime', Date.now() + '')
+}, {
+  deep: true
+})
+
+watch(endPointPulled, val => {
+  restoreEndPointList()
+
+  if (endPointList.value.length >= 1) {
+    endPoint.value = endPointList.value[0].endPoint
+    apiKey.value = endPointList.value[0].apiKey
+    customDomain.value = endPointList.value[0].customDomain || ''
+    updateCurrentEndPoint(endPointList.value[0].endPoint)
+  }
+
+  restoreSavedApiInfo()
+})
 
 onMounted(() => {
   restoreSavedApiInfo()

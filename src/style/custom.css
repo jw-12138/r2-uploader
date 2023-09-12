@@ -82,6 +82,23 @@ pre code {
   [type=checkbox]:checked, [type=checkbox]:checked:active, [type=checkbox]:checked:focus, [type=radio]:checked, [type=radio]:checked:active, [type=radio]:checked:focus {
     background-color: transparent;
   }
+
+  [type=checkbox][role=switch]{
+    border-color: rgba(255,255,255,.1);
+    background: rgba(255,255,255,.1);
+  }
+
+  [type=checkbox][role=switch]::before {
+    background-color: #aaa;
+  }
+
+  [type=checkbox][role=switch]:checked{
+    background: rgba(255,255,255,1);
+  }
+
+  [type=checkbox][role=switch]:checked::before {
+    background-color: #333;
+  }
 }
 
 @media (min-width: 992px) {
