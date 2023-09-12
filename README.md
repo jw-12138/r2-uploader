@@ -194,4 +194,4 @@ Workers and R2 both supports custom domain, and we just need one of them to make
 
 ---
 
-Ok now, I think we've covered everything, if you have any questions, feel free to contact me on [GitHub](https://github.com/jw-12138).
+Ok now, I think we've covered everything, if you have any questions, feel free to create a new issue under [this repo](https://github.com/jw-12138/r2-uploader/issues).
