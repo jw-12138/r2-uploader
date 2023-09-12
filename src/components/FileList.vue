@@ -213,8 +213,6 @@ watch(uploading, (newVal) => {
     endPoint = localStorage.getItem('endPoint')
     apiKey = localStorage.getItem('apiKey')
     customDomain = localStorage.getItem('customDomain')
-      ? localStorage.getItem('customDomain') + '/'
-      : localStorage.getItem('endPoint')
     loadData()
   }
 })
@@ -222,6 +220,7 @@ watch(uploading, (newVal) => {
 watch(endPointUpdated, (newVal) => {
   endPoint = localStorage.getItem('endPoint')
   apiKey = localStorage.getItem('apiKey')
+  customDomain = localStorage.getItem('customDomain')
   fileList.value = []
   dirMap.value = {}
   loadData()

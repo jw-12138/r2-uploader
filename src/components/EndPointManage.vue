@@ -20,19 +20,22 @@
             <input type="radio" name="current_endpoint" :id="item.endPoint" :checked="item.endPoint === endPoint"
                    @change="updateCurrentEndPoint(item.endPoint)" class="w-[2rem] shrink-0"><label
             :for="item.endPoint" class="text-xs w-full">{{ item.endPoint }}</label>
+
+            <button class="shrink-0 bg-transparent w-auto outline inline-block text-xs text-emerald-500 mb-0 mr-2"
+                    style="padding: 0; border: 0" @click="editThisEndpoint(item.endPoint)"
+                    :disabled="editingEndpoint !== item.endPoint && editingEndpoint !== ''">
+              {{ editingEndpoint === item.endPoint ? 'Cancel' : 'Edit' }}
+            </button>
             <button class="shrink-0 bg-transparent w-auto outline inline-block text-xs text-red-500 mb-0"
                     style="padding: 0; border: 0" @click="deleteThisEndPoint(item.endPoint)">Delete
             </button>
-          </div>
-          <div class="opacity-60 text-xs mt-4" v-show="endPointList.length !== 0">
-            To edit an endpoint, just refill the form below with the same endpoint and save it again.
           </div>
         </form>
       </article>
       <article>
         <form class="mb-0" action="javascript:" @submit="saveApiInfo">
           <div class="pb-2 text-xs opacity-80">
-            Add a new endpoint
+            {{ endpointActionText }} &nbsp;
           </div>
           <div>
             <label for="" class="text-sm">Workers Endpoint</label>
@@ -40,11 +43,13 @@
           </div>
           <div>
             <label for="api_key" class="text-sm">Workers Endpoint API Key</label>
-            <input type="password" placeholder="treat it like your browser history" v-model="newApiKey" required id="api_key" class="text-xs">
+            <input type="password" placeholder="treat it like your browser history" v-model="newApiKey" required
+                   id="api_key" class="text-xs">
           </div>
           <div>
             <label for="custom_domain" class="text-sm">Custom Domain (Optional)</label>
-            <input type="text" placeholder="no need for the https:// prefix" v-model="newCustomDomain" id="custom_domain"
+            <input type="text" placeholder="no need for the https:// prefix" v-model="newCustomDomain"
+                   id="custom_domain"
                    style="margin-bottom: .5rem" class="text-xs">
             <div class="opacity-70 text-xs leading-4 mb-8">
               Use your own domain name to access the files instead of <code
@@ -52,8 +57,9 @@
             </div>
           </div>
           <div class="text-center mt-4">
-            <button class="inline-block w-auto text-sm mb-0" :disabled="btnDisabled" type="submit">
-              {{ btnText }}
+            <button class="inline-block w-auto text-sm mb-0" :disabled="btnDisabled" type="submit"
+                    style="padding: .3rem 1rem">
+              &nbsp;{{ btnText }}&nbsp;
             </button>
           </div>
         </form>
@@ -80,6 +86,45 @@ let customDomain = ref('')
 let newEndpoint = ref('')
 let newApiKey = ref('')
 let newCustomDomain = ref('')
+
+let editingEndpoint = ref('')
+let endpointActionText = ref('Add a new endpoint')
+let editThisEndpoint = function (endpoint) {
+  if (editingEndpoint.value === endpoint) {
+    editingEndpoint.value = ''
+    animateText(endpointActionText, 'Add a new endpoint')
+    newEndpoint.value = ''
+    newApiKey.value = ''
+    newCustomDomain.value = ''
+    return
+  }
+
+  newEndpoint.value = endpoint
+  newApiKey.value = endPointList.value.find(item => item.endPoint === endpoint).apiKey
+  newCustomDomain.value = endPointList.value.find(item => item.endPoint === endpoint).customDomain || ''
+  let customDomainUrl = new URL(newCustomDomain.value)
+  newCustomDomain.value = customDomainUrl.hostname
+
+  editingEndpoint.value = endpoint
+
+  animateText(endpointActionText, 'Edit this endpoint')
+}
+
+let animateText = function (refVariable, targetText, options) {
+  let {interval = 20, skipText = ''} = options || {}
+  refVariable.value = '' + skipText
+
+  let length = targetText.length
+
+  let s = setInterval(function () {
+    if (refVariable.value.length === length) {
+      clearInterval(s)
+      return false
+    }
+
+    refVariable.value += targetText[refVariable.value.length]
+  }, interval)
+}
 
 
 const restoreEndPointList = function () {
@@ -168,6 +213,8 @@ const saveApiInfo = function () {
     duplicate.customDomain = newCustomDomain.value
     endPointList.value = endPointList.value.filter(item => item.endPoint !== newEndpoint.value)
     endPointList.value.push(duplicate)
+    editingEndpoint.value = ''
+    animateText(endpointActionText, 'Add a new endpoint')
   } else {
     endPointList.value.push({
       endPoint: newEndpoint.value,
@@ -179,7 +226,10 @@ const saveApiInfo = function () {
 
   localStorage.setItem('endPointList', JSON.stringify(endPointList.value))
 
-  btnText.value = 'Saved!'
+  animateText(btnText, 'Saved!', {
+    interval: 80,
+    skipText: 'S'
+  })
   btnDisabled.value = true
 
   if (endPointList.value.length === 1) {
@@ -191,9 +241,12 @@ const saveApiInfo = function () {
   newCustomDomain.value = ''
 
   setTimeout(() => {
-    btnText.value = 'Save To LocalStorage'
+    animateText(btnText, 'Save To LocalStorage', {
+      interval: 20,
+      skipText: 'Save '
+    })
     btnDisabled.value = false
-  }, 1000)
+  }, 2000)
 }
 
 function restorePanelOpenStatus() {
