@@ -1,12 +1,8 @@
-Last updated: 2023-09-11
+<span style="font-size: .8rem">Last updated: 2023-09-12</span>
 
 ### Why this tool? 🤔
 
-In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing platform with generous free tier. It is a great alternative to AWS S3, especially for small projects and personal use. However, it lacks a web interface to manage the files. This tool is a simple web interface for R2, which allows you to manage your files in R2 buckets.
-
-### Security 🔒
-
-R2 Uploader is designed for people who want to manage their R2 buckets without using the command line or the default Cloudflare web interface due the upload limits and lack of user experience. It is not designed for private use, meaning if you go through with this setup guide, you'll end up having a public bucket which everyone can read as long as they have the correct link. It's great for hosting static websites, images, videos, etc. but not for private files.
+In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing platform with generous free tier. It is a great alternative to AWS S3, especially for small projects and personal use. However, Cloudflare dashboard could only upload files smaller than 300MB, which is not ideal for large files. This tool is a simple web interface for R2, which allows you to manage your files in R2 buckets.
 
 ### Requirements ☝️
 
@@ -35,91 +31,95 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
 5. Click on the button "Edit code", now you will see a code editor, delete all the code in it and paste the code below:
 
    <details><summary>Expand the code</summary>
-   
+
    ```js
-    var hasValidHeader = (request, env) => {
-      return request.headers.get('x-api-key') === env.AUTH_KEY_SECRET
-    }
-    function authorizeRequest(request, env, key) {
-      switch (request.method) {
-        case 'PUT':
-          return hasValidHeader(request, env)
-        case 'DELETE':
-          return hasValidHeader(request, env)
-        case 'PATCH':
-          return hasValidHeader(request, env)
-        case 'GET':
-          return true
-        case 'OPTIONS':
-          return true
-        default:
-          return false
-      }
-    }
-    var worker_default = {
-      async fetch(request, env) {
-        const url = new URL(request.url)
-        const key = url.pathname.slice(1)
-        if (!authorizeRequest(request, env, key)) {
-          return new Response('Forbidden', { status: 403 })
-        }
-        switch (request.method) {
-          case 'PUT':
-            await env.R2_BUCKET.put(key, request.body)
-            return new Response(`Put ${key} successfully!`, {
-              headers: {
-                'Access-Control-Allow-Origin': '*'
-              }
-            })
-          case 'PATCH':
-            let list = await env.R2_BUCKET.list()
-            return new Response(JSON.stringify(list), {
-              headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-              }
-            })
-          case 'GET':
-            const object = await env.R2_BUCKET.get(key)
-            if (object === null) {
-              return new Response('Object Not Found', { status: 404 })
-            }
-            const headers = new Headers()
-            object.writeHttpMetadata(headers)
-            headers.set('etag', object.httpEtag)
-            headers.set('Access-Control-Allow-Origin', '*')
-            return new Response(object.body, {
-              headers
-            })
-          case 'DELETE':
-            await env.R2_BUCKET.delete(key)
-            return new Response('Deleted!', {
-              headers: {
-                'Access-Control-Allow-Origin': '*'
-              }
-            })
-          case 'OPTIONS':
-            return new Response(null, {
-              headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'PUT, PATCH, GET, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
-              }
-            })
-          default:
-            return new Response('Method Not Allowed', {
-              status: 405,
-              headers: {
-                'Access-Control-Allow-Methods': 'PUT, PATCH, GET, DELETE, OPTIONS',
-                'Access-Control-Allow-Origin': '*'
-              }
-            })
-        }
-      }
-    }
-    export {
-      worker_default as default
-    }
+   var hasValidHeader = (request, env) => {
+     return request.headers.get('x-api-key') === env.AUTH_KEY_SECRET
+   }
+   function authorizeRequest(request, env, key) {
+     switch (request.method) {
+       case 'PUT':
+         return hasValidHeader(request, env)
+       case 'DELETE':
+         return hasValidHeader(request, env)
+       case 'PATCH':
+         return hasValidHeader(request, env)
+       case 'GET':
+         if (env.PRIVATE_BUCKET) {
+           return hasValidHeader(request, env)
+         } else {
+           return true
+         }
+       case 'OPTIONS':
+         return true
+       default:
+         return false
+     }
+   }
+   var worker_default = {
+     async fetch(request, env) {
+       const url = new URL(request.url)
+       const key = url.pathname.slice(1)
+       if (!authorizeRequest(request, env, key)) {
+         return new Response('Forbidden', { status: 403 })
+       }
+       switch (request.method) {
+         case 'PUT':
+           await env.R2_BUCKET.put(key, request.body)
+           return new Response(`Put ${key} successfully!`, {
+             headers: {
+               'Access-Control-Allow-Origin': '*'
+             }
+           })
+         case 'PATCH':
+           let list = await env.R2_BUCKET.list()
+           return new Response(JSON.stringify(list), {
+             headers: {
+               'Content-Type': 'application/json',
+               'Access-Control-Allow-Origin': '*'
+             }
+           })
+         case 'GET':
+           const object = await env.R2_BUCKET.get(key)
+           if (object === null) {
+             return new Response('Object Not Found', { status: 404 })
+           }
+           const headers = new Headers()
+           object.writeHttpMetadata(headers)
+           headers.set('etag', object.httpEtag)
+           headers.set('Access-Control-Allow-Origin', '*')
+           return new Response(object.body, {
+             headers
+           })
+         case 'DELETE':
+           await env.R2_BUCKET.delete(key)
+           return new Response('Deleted!', {
+             headers: {
+               'Access-Control-Allow-Origin': '*'
+             }
+           })
+         case 'OPTIONS':
+           return new Response(null, {
+             headers: {
+               'Access-Control-Allow-Origin': '*',
+               'Access-Control-Allow-Methods':
+                 'PUT, PATCH, GET, DELETE, OPTIONS',
+               'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
+             }
+           })
+         default:
+           return new Response('Method Not Allowed', {
+             status: 405,
+             headers: {
+               'Access-Control-Allow-Methods':
+                 'PUT, PATCH, GET, DELETE, OPTIONS',
+               'Access-Control-Allow-Origin': '*'
+             }
+           })
+       }
+     }
+   }
+   export { worker_default as default }
    ```
 
    </details>
@@ -130,7 +130,7 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
    ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/r2_page.png)
 
 8. First we focus on the "Environment Variables" section, we need to add a key value pair for the Worker to read as a configuration. Click on the "Add variable" button, and then enter the variable name as "AUTH_KEY_SECRET" and the value is a random string, you can generate one [here](https://www.avast.com/random-password-generator), click "Save and deploy". Remember to save the value somewhere, **we will need it later**.
- 
+
    ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/workers_api_key_setup.png)
 
 9. Now we scroll down to the "R2 Bucket Bindings" section, click on the "Add binding" button, and then enter the variable name as "R2_BUCKET" and the value is the name of the bucket you created earlier, click "Save and deploy".
@@ -155,6 +155,19 @@ Now you can upload and manage your files in the R2 bucket!
 
 R2 Uploader **does not** store your Endpoints or API keys in the cloud, it is stored in your browser's LocalStorage, which means it is only accessible by you. All the traffic goes through the Worker and the R2 bucket you just created.
 
+### For private use 🔒
+
+At default, the Worker will allow all the GET requests to go through, which means anyone can access your file if they know the URL.
+
+If you want to make your bucket private, you can do so by adding a new variable in the Worker settings.
+
+1. Go to the worker page, go to the "Settings" and then click the "Variable" on the left side.
+2. Click on the "Edit variable" and "Add variable" button, then enter the variable name as "PRIVATE_BUCKET" and the value is "true", click "Save and deploy".
+   
+This will make the Worker to check the `x-api-key` header for every request, and only allow the request with the correct API key to go through.
+
+If you want the bucket to be public again, just delete the variable.
+
 ### Set up a custom domain 🌐
 
 By default, the Worker URL should be working right away, unless you want the url to be a little bit clean or, you live in China. Unfortunately, the domain name `workers.dev` is blocked in China, so we need to set up a custom domain.
@@ -173,12 +186,11 @@ Workers and R2 both supports custom domain, and we just need one of them to make
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. On the left panel, there is a section called "R2". Click on it.
 3. Go to your bucket, click on the "Settings", find "Custom Domains" section, and then click on the "Connect Domain" button. Input the domain name just like you did in the Workers, and you're done!
-4. Remember to update the **Custom Domain** in the R2 Uploader with **the R2 custom domain**. 
-   
-   Attention! This time, instead of changing the Endpoint field in the R2 Uploader, we change the Custom Domain field with the R2 custom domain.
-   
-   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/endpoint.png)
+4. Remember to update the **Custom Domain** in the R2 Uploader with **the R2 custom domain**.
 
+   Attention! This time, instead of changing the Endpoint field in the R2 Uploader, we change the Custom Domain field with the R2 custom domain.
+
+   ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/endpoint.png)
 
 ---
 

@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 .vercel
 setup-guide/*.html
+public/setup-guide/*.html

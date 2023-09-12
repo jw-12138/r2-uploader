@@ -4,7 +4,7 @@
 import {marked} from 'marked'
 import fs from 'fs'
 
-let baseDir = './setup-guide/'
+let baseDir = './public/setup-guide/'
 let files = fs.readdirSync(baseDir)
 let generate_list = files.filter(el => {
   return el.endsWith('.md')
@@ -66,6 +66,7 @@ const html_template = `
 
 console.log();
 for (const path of generate_list) {
+  let start = Date.now()
   let file = Bun.file(baseDir + path)
   let md = await file.text()
   let html = marked.parse(md)
@@ -73,7 +74,9 @@ for (const path of generate_list) {
   let html_path = baseDir + path.replace('.md', '.html')
   await Bun.write(html_path, html_template.replace('###HTML###', html))
 
-  console.log(`Generated ${html_path}`)
+  let end = Date.now()
+
+  console.log(`Generated ${html_path} in ${end - start}ms`)
 }
 console.log();
 

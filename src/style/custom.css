@@ -12,6 +12,10 @@ details {
   border: none;
 }
 
+[data-tooltip]:not(a,button,input) {
+  border-bottom: none;
+}
+
 details summary::after {
   display: inline-block;
   position: relative;
