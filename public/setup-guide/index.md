@@ -137,6 +137,8 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
 
    ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/r2_bindings_to_worker.png)
 
+If you go to the Worker URL now, you will see a "Object Not Found" message, that means the worker is working as expected.
+
 Now we have set up the worker, we can now set up the uploader.
 
 ### Set up the Uploader 🗄️
@@ -150,6 +152,8 @@ Remember the Worker URL and the random string we saved earlier? We will need the
 In R2 Uploader, we call the Worker URL as the "Endpoint" and the random string as the "API Key". Enter the Endpoint and the API key, ignore the custom domain for now and click "Save to LocalStorage".
 
 Now you can upload and manage your files in the R2 bucket!
+
+![upload files with the uploader](https://worker-shrill-water-2ae4.jw1dev.workers.dev/p3eqM3JOpcDfzXdi.png)
 
 <span style="font-size: 2rem">🎉</span>
 
@@ -192,6 +196,10 @@ Workers and R2 both supports custom domain, and we just need one of them to make
 
    ![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/endpoint.png)
 
+### Hidden features 😜
+
+1. You can copy a file from your system and then paste it into the uploader, it will automatically queue the file and ready to be uploaded.
+2. To edit the name of queued files, just click on the file name.
 ---
 
 Ok now, I think we've covered everything, if you have any questions, feel free to create a new issue under [this repo](https://github.com/jw-12138/r2-uploader/issues).
