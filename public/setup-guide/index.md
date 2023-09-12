@@ -143,7 +143,7 @@ Now we have set up the worker, we can now set up the uploader.
 
 Phew, we've come a long way, now we are going to set up the uploader, which is the web interface for the R2 bucket.
 
-![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/uploader_web_interface.png)
+![](https://worker-shrill-water-2ae4.jw1dev.workers.dev/eFeFgOgn_bXLbpYs.png)
 
 Remember the Worker URL and the random string we saved earlier? We will need them now.
 

@@ -470,6 +470,9 @@ function handlePaste() {
     let files = e.clipboardData.files
     Array.from(files).forEach((file) => {
       file.key = file.name
+      // get extension
+      let extension = file.name.split('.').pop()
+      file.id_key = nanoid(16) + '.' + extension
     })
 
     fileList.value = [...fileList.value, ...Array.from(files)]

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:setup": "bun run public/setup-guide/gen_markdown.js",
+    "build:setup": "cp README.md public/setup-guide/index.md; bun run public/setup-guide/gen_markdown.js",
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "bun run build:setup; vercel --prod",
