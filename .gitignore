@@ -25,3 +25,4 @@ dist-ssr
 .vercel
 setup-guide/*.html
 public/setup-guide/*.html
+.env

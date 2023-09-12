@@ -27,7 +27,7 @@
               {{ editingEndpoint === item.endPoint ? 'Cancel' : 'Edit' }}
             </button>
             <button class="shrink-0 bg-transparent w-auto outline inline-block text-xs text-red-500 mb-0"
-                    style="padding: 0; border: 0" @click="deleteThisEndPoint(item.endPoint)">Delete
+                    style="padding: 0; border: 0" @click="deleteThisEndPoint(item.endPoint)" :disabled="editingEndpoint !== ''">Delete
             </button>
           </div>
         </form>
