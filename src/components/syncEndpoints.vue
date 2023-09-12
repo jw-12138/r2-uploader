@@ -74,6 +74,7 @@ import {useStatusStore} from '../store/status'
 let statusStore = useStatusStore()
 import * as encoding from 'crypto-js/enc-utf8'
 import {animateText} from '../utils/animateText.js'
+import axios from 'axios'
 
 let isDark = ref(false)
 let GITHUB_CLIENT_ID = '8318b6fc09ace8ab9747'
@@ -167,15 +168,15 @@ let syncMyData = async function () {
   animateText(sync_status, 'pushing...hold on')
 
   syncingMyData.value = true
-  let req = await fetch(apiEndpoint, {
+  let req = await axios(apiEndpoint, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
       'Content-Type': 'application/json'
     },
     method: 'POST',
-    body: JSON.stringify({
+    data: {
       config: encryptedData
-    })
+    }
   })
 
   syncingMyData.value = false
@@ -195,7 +196,7 @@ let pullMyData = async function () {
   animateText(sync_status, 'pulling...hold on')
 
   pullingMyData.value = true
-  let req = await fetch(apiEndpoint, {
+  let req = await axios(apiEndpoint, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
       'Content-Type': 'application/json'
@@ -210,7 +211,7 @@ let pullMyData = async function () {
     return false
   }
 
-  let data = await req.json()
+  let data = req.data
 
   if (!hasEncryptionPassword.value) {
     localStorage.setItem('encryptedEndpointList', data.config)
@@ -270,7 +271,7 @@ let deleteMyData = async function () {
   animateText(sync_status, 'deleting...hold on')
   let apiEndpoint = '/api/delete_config'
 
-  let req = await fetch(apiEndpoint, {
+  let req = await axios(apiEndpoint, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
       'Content-Type': 'application/json'
@@ -337,7 +338,7 @@ async function checkUser() {
 
   findingUser.value = true
 
-  let user = await fetch(endPoint, {
+  let user = await axios(endPoint, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -346,11 +347,13 @@ async function checkUser() {
 
   findingUser.value = false
 
+  console.log(user)
+
   if (user.status !== 200) {
     findUserGotError.value = true
     console.log(user)
   } else {
-    let userJson = await user.json()
+    let userJson = user.data
     userInfo.value = userJson
 
     isLogin.value = true
