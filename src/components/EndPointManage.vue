@@ -13,7 +13,7 @@
           </span>
           </div>
           <div v-show="endPointList.length === 0" class="text-sm">
-            You need Cloudflare Workers to upload files to Cloudflare R2. Have a look with the
+            You need Cloudflare Workers to upload files to Cloudflare R2. Have a look at the
             <a href="/setup-guide/" class="underline">setup guide</a>.
           </div>
           <div v-for="item in endPointList" class="flex mt-2">
