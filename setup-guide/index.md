@@ -26,7 +26,7 @@ And that's it, now we set up the workers.
 
 ### Set up the Worker 👷‍♂️
 
-A Worker is like the backend of a website, it allows the R2 Uploader to communicate with the R2 bucket.
+A Worker is like the backend of a website, it allows the R2 Uploader to communicate with the R2 bucket. **This is the most important part of the setup, so please follow the steps carefully.**
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. On the left panel, there is a section called "Workers & Pages". Click on it.

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build:setup": "bun run setup-guide/gen_markdown.js",
-    "build": "vite build; mkdir -p dist/setup-guide; cp -r setup-guide/* dist/setup-guide/",
+    "build": "bun run setup-guide/gen_markdown.js; vite build; mkdir -p dist/setup-guide; cp -r setup-guide/* dist/setup-guide/",
     "preview": "vite preview",
     "deploy": "yarn build:setup; vercel --prod",
     "clean": "rm -rf dist"

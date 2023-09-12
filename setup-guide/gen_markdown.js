@@ -64,6 +64,7 @@ const html_template = `
 </html>
 `
 
+console.log();
 for (const path of generate_list) {
   let file = Bun.file(baseDir + path)
   let md = await file.text()
@@ -74,6 +75,7 @@ for (const path of generate_list) {
 
   console.log(`Generated ${html_path}`)
 }
+console.log();
 
 
 
