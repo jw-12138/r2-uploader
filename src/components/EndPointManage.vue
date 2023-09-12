@@ -40,11 +40,11 @@
           </div>
           <div>
             <label for="api_key" class="text-sm">Workers Endpoint API Key</label>
-            <input type="password" placeholder="Super Secret" v-model="newApiKey" required id="api_key" class="text-xs">
+            <input type="password" placeholder="treat it like your browser history" v-model="newApiKey" required id="api_key" class="text-xs">
           </div>
           <div>
-            <label for="custom_domain" class="text-sm">Custom Domain</label>
-            <input type="text" placeholder="Optional, no need for the https://, just the domain" v-model="newCustomDomain" id="custom_domain"
+            <label for="custom_domain" class="text-sm">Custom Domain (Optional)</label>
+            <input type="text" placeholder="no need for the https:// prefix" v-model="newCustomDomain" id="custom_domain"
                    style="margin-bottom: .5rem" class="text-xs">
             <div class="opacity-70 text-xs leading-4 mb-8">
               Use your own domain name to access the files instead of <code
