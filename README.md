@@ -174,7 +174,7 @@ If you want the bucket to be public again, just delete the variable.
 
 ### Set up a custom domain 🌐
 
-By default, the Worker URL should be working right away, unless you want the url to be a little bit clean or, you live in China. Unfortunately, the domain name `workers.dev` is blocked in China, so we need to set up a custom domain.
+By default, the Worker URL should be working right away, unless you want the url to be a little bit clean or, you live in China (or maybe some other country). Unfortunately, the domain name `workers.dev` is blocked in China, so we need to set up a custom domain.
 
 Workers and R2 both supports custom domain, and we just need one of them to make the R2 work in China.
 
@@ -196,10 +196,16 @@ Workers and R2 both supports custom domain, and we just need one of them to make
 
    ![](https://r2-cf-api.jw1.dev/endpoint.png)
 
+This sounds a little bit complicated, let me break it down for you:
+
+- Setting up a custom domain for Workers is the simplest way to work with R2 Uploader
+
 ### Hidden features 😜
 
 1. You can copy a file from your system and then paste it into the uploader, it will automatically queue the file and ready to be uploaded.
 2. To edit the name of queued files, just click on the file name.
+3. Rename the file like `folder/file.txt` will upload the `file.txt` to the folder, you'll get a folder structure in your bucket.
+
 ---
 
 Ok now, I think we've covered everything, if you have any questions, feel free to create a new issue under [this repo](https://github.com/jw-12138/r2-uploader/issues).

@@ -30,7 +30,7 @@ const html_template = `
     #app {
       max-width: 40rem;
       margin: 0 auto;
-      padding: 1rem;
+      padding: 1rem 1.5rem;
     }
     
     h3 {

@@ -351,7 +351,14 @@ let handleFolder = async function () {
 
     // get extension
     let extension = file.name.split('.').pop()
-    file.id_key = nanoid(16) + '.' + extension
+
+    // get sub-folder str
+    let subFolderArr = file.key.split('/')
+    subFolderArr.pop()
+
+    let subFolderStr = subFolderArr.join('/')
+
+    file.id_key = subFolderStr + '/' + nanoid(16) + '.' + extension
 
     fileList.value.push(file)
   })
