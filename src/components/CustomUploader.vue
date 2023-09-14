@@ -205,7 +205,7 @@
           >{{ parseByteSize(item.size) }}
               <span v-show="uploading && !item.compressing">
                 / {{ progressMap[item.key] }}%</span
-              ><span v-show="item.compressing">压缩中...</span></span
+              ><span v-show="item.compressing">Compressing...</span></span
           >
           </div>
           <div
