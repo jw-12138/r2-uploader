@@ -62,7 +62,7 @@
 
       <div>
         <div
-          class="bg-[#eee] dark:bg-[#333] rounded p-2 mb-2"
+          class="bg-neutral-50 dark:bg-[#333] rounded p-2 mb-2 shadow"
           v-for="folder in Object.keys(dirMap)"
         >
           <div class="mb-2 text-xs opacity-60 italic">{{ folder }}/</div>
@@ -396,6 +396,9 @@ let deleteThisFile = function (key, isBatchDelete = false, options = {}) {
       fileList.value.forEach((item) => {
         parseDirs(item)
       })
+
+      let { sortKey, sortType } = getSortVariables(sort.value)
+      sortFileList(sortKey, sortType)
 
       if (options.callback) {
         options.callback()

@@ -204,6 +204,8 @@ This sounds a little bit complicated, let me break it down for you:
 
 1. You can copy a file from your system and then paste it into the uploader, it will automatically queue the file and ready to be uploaded.
 2. To edit the name of queued files, just click on the file name.
+3. Rename the file like `folder/file.txt` will upload the `file.txt` to the folder, you'll get a folder structure in your bucket.
+
 ---
 
 Ok now, I think we've covered everything, if you have any questions, feel free to create a new issue under [this repo](https://github.com/jw-12138/r2-uploader/issues).
