@@ -188,7 +188,7 @@
               </form>
             </div>
             <span
-              data-tooltip="Click to rename"
+              :data-tooltip="uploading ? 'Can\'t rename now' : 'Click to rename'"
               v-show="editKey !== item.key"
               class="inline-block break-all"
               @click="showRenameInput(item.key)"
@@ -203,10 +203,7 @@
                 'text-red-500': statusMap[item.key] === 'error'
               }"
           >{{ parseByteSize(item.size) }}
-              <span v-show="uploading && !item.compressing">
-                / {{ progressMap[item.key] }}%</span
-              ><span v-show="item.compressing">Compressing...</span></span
-          >
+              <span v-show="uploading && !item.compressing"> / {{ progressMap[item.key] }}%</span><span v-show="item.compressing">Compressing...</span></span>
           </div>
           <div
             v-show="editKey !== item.key"
