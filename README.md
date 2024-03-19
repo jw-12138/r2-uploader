@@ -159,6 +159,8 @@ Now you can upload and manage your files in the R2 bucket!
 
 R2 Uploader **does not** store your Endpoints or API keys in the cloud, it is stored in your browser's LocalStorage, which means it is only accessible by you. All the traffic goes through the Worker and the R2 bucket you just created.
 
+**Note:** We use `showDirectoryPicker` API to make the folder upload possible, if the `Choose Folder` button doesn't show up, it simply means that your browser does not support this API. ([showDirectoryPicker on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker))
+
 ### For private use 🔒
 
 At default, the Worker will allow all the GET requests to go through, which means anyone can access your file if they know the URL.
