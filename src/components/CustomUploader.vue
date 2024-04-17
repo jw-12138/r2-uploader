@@ -272,13 +272,18 @@ let compressImage = async function (file) {
     new Compressor(file, {
       quality: 0.6,
       convertSize: Infinity,
+      mimeType: 'image/webp',
       success(result) {
         // result is a blob, convert it into a file
         let newFile = new File([result], result.name, {
           type: result.type
         })
-        newFile.key = file.key
-        newFile.id_key = file.id_key
+
+        let extension = newFile.name.split('.').pop()
+        newFile.id_key = file.id_key.split('.').shift() + '.' + extension
+        newFile.key = file.key.split('.').shift() + '.' + extension
+
+        console.log(newFile)
         console.log(`compressed ${file.name} from ${parseByteSize(file.size)} to ${parseByteSize(newFile.size)}`)
         resolve(newFile)
       },
