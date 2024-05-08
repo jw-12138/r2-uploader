@@ -133,9 +133,43 @@
               v-model="compressImagesBeforeUploading"
               id="compressImagesBeforeUploading"
             />
-            <label class="text-xs" for="compressImagesBeforeUploading"
-            >Compress images before uploading (will also remove EXIF)</label
-            >
+            <label class="text-xs" for="compressImagesBeforeUploading">
+              Compress images before uploading
+            </label>
+          </div>
+          <div v-show="compressImagesBeforeUploading" class="text-xs pt-4 pl-2">
+            <div>
+              <label for="removeEXIF" class="flex items-center"><input id="removeEXIF" type="checkbox" v-model="defaultCompressOptions.removeEXIF"> Remove EXIF</label>
+            </div>
+            <div class="flex">
+              <label for="covertImageType" class="flex items-center">
+                <input id="covertImageType" type="checkbox" class="shrink-0" v-model="defaultCompressOptions.convertImageType">
+                <span class="shrink-0">Covert to</span>
+                <select :disabled="!defaultCompressOptions.convertImageType" class="shrink-0 mb-0 ml-2 text-sm py-1 px-2" v-model="defaultCompressOptions.imageType">
+                  <option value="jpeg">jpg</option>
+                  <option value="png">png</option>
+                  <option value="webp">webp</option>
+                </select>
+              </label>
+            </div>
+            <div class="flex">
+              <label for="maxWidth" class="flex items-center">
+                <span class="shrink-0">Max Width:</span>
+                <input type="number" class="text-xs py-1 px-2 ml-1 mb-0" style="margin-bottom: 0; padding: .25rem .25rem; height: auto" v-model="defaultCompressOptions.maxWidth" id="maxWidth" placeholder="Infinity">
+              </label>
+            </div>
+            <div class="flex">
+              <label for="maxHeight" class="flex items-center">
+                <span class="shrink-0">Max Height:</span>
+                <input type="number" class="text-xs py-1 px-2 ml-1 mb-0" style="margin-bottom: 0; padding: .25rem .25rem; height: auto" v-model="defaultCompressOptions.maxHeight" id="maxHeight" placeholder="Infinity">
+              </label>
+            </div>
+            <div class="flex">
+              <label for="quality" class="flex items-center">
+                <span class="shrink-0">Image Quality:</span>
+                <input type="number" class="text-xs py-1 px-2 ml-1 mb-0" style="margin-bottom: 0; padding: .25rem .25rem; height: auto" v-model="defaultCompressOptions.quality" id="quality">
+              </label>
+            </div>
           </div>
         </div>
 
@@ -227,7 +261,7 @@
 </template>
 
 <script setup>
-import {ref, watch} from 'vue'
+import {reactive, ref, watch, onMounted} from 'vue'
 import axios from 'axios'
 import {useStatusStore} from '../store/status'
 import {nanoid} from 'nanoid'
@@ -252,7 +286,7 @@ let editKey = ref('')
 let renameFileWithRandomId = ref(false)
 let compressImagesBeforeUploading = ref(false)
 
-let clearUploadedFiles = function(){
+let clearUploadedFiles = function () {
   uploadedList.value = []
   progressMap.value = {}
   statusMap.value = {}
@@ -260,6 +294,37 @@ let clearUploadedFiles = function(){
   fileList.value = []
   uploadIsDone.value = false
 }
+
+let defaultCompressOptions = reactive({
+  quality: 0.9,
+  removeEXIF: true,
+  convertImageType: true,
+  imageType: 'webp',
+  maxWidth: '',
+  maxHeight: ''
+})
+
+watch(defaultCompressOptions, function (val) {
+  localStorage.setItem('defaultCompressOptions', JSON.stringify(val))
+})
+
+onMounted(() => {
+  let defaultCompressOptionsStr = localStorage.getItem('defaultCompressOptions')
+  if (defaultCompressOptionsStr) {
+    try {
+      let config = JSON.parse(defaultCompressOptionsStr)
+
+      defaultCompressOptions.quality = config.quality
+      defaultCompressOptions.removeEXIF = config.removeEXIF
+      defaultCompressOptions.convertImageType = config.convertImageType
+      defaultCompressOptions.imageType = config.imageType
+      defaultCompressOptions.maxWidth = config.maxWidth
+      defaultCompressOptions.maxHeight = config.maxHeight
+    } catch (e) {
+      console.log(e)
+    }
+  }
+})
 
 let compressImage = async function (file) {
   const allowedType = 'image/'
@@ -269,10 +334,14 @@ let compressImage = async function (file) {
   }
 
   return new Promise((resolve, reject) => {
+
     new Compressor(file, {
-      quality: 0.6,
+      quality: 0.8,
       convertSize: Infinity,
-      mimeType: 'image/webp',
+      retainExif: !defaultCompressOptions.removeEXIF,
+      mimeType: defaultCompressOptions.convertImageType ? ('image/' + defaultCompressOptions.imageType) : 'auto',
+      maxWidth: defaultCompressOptions.maxWidth ? defaultCompressOptions.maxWidth : undefined,
+      maxHeight: defaultCompressOptions.maxHeight ? defaultCompressOptions.maxHeight : undefined,
       success(result) {
         // result is a blob, convert it into a file
         let newFile = new File([result], result.name, {
