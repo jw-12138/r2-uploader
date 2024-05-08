@@ -1,7 +1,7 @@
 <template>
   <form action="javascript:">
     <div class="font-bold italic">
-      <div> File List </div>
+      <div> File List</div>
     </div>
 
     <div class="mt-4 mb-4 flex items-center">
@@ -11,7 +11,7 @@
         @click="loadData"
         :aria-busy="loading"
         :disabled="loading || !endPoint"
-        >Refresh
+      >Refresh
       </button>
       <button
         class="text-xs inline-block w-auto outline mb-0 ml-2"
@@ -26,7 +26,7 @@
         class="text-xs inline-block w-auto outline mb-0 ml-2 border-red-500 text-red-500"
         style="padding: 0.3rem 0.5rem"
         @click="deleteSelectedFiles"
-        >Delete Selected
+      >Delete Selected
       </button>
     </div>
 
@@ -65,62 +65,67 @@
           class="bg-neutral-50 dark:bg-[#333] rounded p-2 mb-2 shadow"
           v-for="folder in Object.keys(dirMap)"
         >
-          <div class="mb-2 text-xs opacity-60 italic">{{ folder }}/</div>
-          <div class="mb-2 text-xs" v-show="selectMode">
-            <input
-              type="checkbox"
-              :id="folder + '/'"
-              @change="handleFolderSelect(folder)"
-            />
-            <label :for="folder + '/'">Select All</label>
-          </div>
-          <div
-            class="item mb-2 rounded text-sm pl-4 py-1 flex items-center justify-between"
-            v-for="item in dirMap[folder]"
-          >
-            <div class="w-[2rem]" v-show="selectMode">
+          <details open class="mb-0 pb-1">
+            <summary class="text-xs">
+              {{ folder }}/
+            </summary>
+
+            <div class="mb-2 text-xs" v-show="selectMode">
               <input
                 type="checkbox"
-                @change="updateSelectedFiles(item, folder)"
-                v-model="item.selected"
-                :id="item.key"
+                :id="folder + '/'"
+                @change="handleFolderSelect(folder)"
               />
+              <label :for="folder + '/'">Select All</label>
             </div>
             <div
-              class="name whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
-              style="width: calc(100% - 7rem)"
-              :style="{
+              class="item mb-2 rounded text-sm pl-4 py-1 flex items-center justify-between"
+              v-for="item in dirMap[folder]"
+            >
+              <div class="w-[2rem]" v-show="selectMode">
+                <input
+                  type="checkbox"
+                  @change="updateSelectedFiles(item, folder)"
+                  v-model="item.selected"
+                  :id="item.key"
+                />
+              </div>
+              <div
+                class="name whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
+                style="width: calc(100% - 7rem)"
+                :style="{
                 width: selectMode ? 'calc(100% - 2rem)' : 'calc(100% - 5rem)'
               }"
-            >
-              <div
-                class="w-full overflow-hidden text-ellipsis whitespace-nowrap"
               >
-                <a
-                  :href="(customDomain ? customDomain : endPoint) + item.key"
-                  target="_blank"
-                  v-show="!selectMode"
-                  >{{ item.fileName }}</a
+                <div
+                  class="w-full overflow-hidden text-ellipsis whitespace-nowrap"
                 >
-                <label v-show="selectMode" :for="item.key" class="mb-0">{{
-                  item.fileName
-                }}</label>
+                  <a
+                    :href="(customDomain ? customDomain : endPoint) + item.key"
+                    target="_blank"
+                    v-show="!selectMode"
+                  >{{ item.fileName }}</a
+                  >
+                  <label v-show="selectMode" :for="item.key" class="mb-0">{{
+                      item.fileName
+                    }}</label>
+                </div>
+              </div>
+              <div
+                class="actions w-[5rem] shrink-0 text-right"
+                v-show="!selectMode"
+              >
+                <button
+                  style="border: none; padding: 0.2rem 0.3rem"
+                  class="w-auto inline-block outline text-xs text-red-500 mb-0"
+                  @click="deleteThisFile(item.key)"
+                  :aria-busy="deletingKey === item.key"
+                  :disabled="deletingKey === item.key"
+                >Delete
+                </button>
               </div>
             </div>
-            <div
-              class="actions w-[5rem] shrink-0 text-right"
-              v-show="!selectMode"
-            >
-              <button
-                style="border: none; padding: 0.2rem 0.3rem"
-                class="w-auto inline-block outline text-xs text-red-500 mb-0"
-                @click="deleteThisFile(item.key)"
-                :aria-busy="deletingKey === item.key"
-                :disabled="deletingKey === item.key"
-                >Delete
-              </button>
-            </div>
-          </div>
+          </details>
         </div>
       </div>
     </div>
@@ -128,10 +133,10 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import {onMounted, ref, watch} from 'vue'
 import axios from 'axios'
-import { useStatusStore } from '../store/status'
-import { storeToRefs } from 'pinia'
+import {useStatusStore} from '../store/status'
+import {storeToRefs} from 'pinia'
 
 let sort = ref('0')
 
@@ -143,11 +148,11 @@ watch(sort, function (val) {
     return false
   }
 
-  let { sortKey, sortType } = getSortVariables(val)
+  let {sortKey, sortType} = getSortVariables(val)
   sortFileList(sortKey, sortType)
 })
 
-function getSortVariables(val){
+function getSortVariables(val) {
   let sortKey
   let sortType
 
@@ -169,7 +174,7 @@ function getSortVariables(val){
 }
 
 let sortFileList = function (sortKey, sortType) {
-  if(!sortKey){
+  if (!sortKey) {
     dirMap.value = {}
     fileList.value.forEach((item) => {
       parseDirs(item)
@@ -198,7 +203,7 @@ let sortFileList = function (sortKey, sortType) {
 }
 
 let statusStore = useStatusStore()
-let { uploading, endPointUpdated } = storeToRefs(statusStore)
+let {uploading, endPointUpdated} = storeToRefs(statusStore)
 
 let selectMode = ref(false)
 
@@ -397,7 +402,7 @@ let deleteThisFile = function (key, isBatchDelete = false, options = {}) {
         parseDirs(item)
       })
 
-      let { sortKey, sortType } = getSortVariables(sort.value)
+      let {sortKey, sortType} = getSortVariables(sort.value)
       sortFileList(sortKey, sortType)
 
       if (options.callback) {
@@ -450,7 +455,7 @@ let loadData = async function () {
 
       restoreSortSelection()
 
-      let { sortKey, sortType } = getSortVariables(sort.value)
+      let {sortKey, sortType} = getSortVariables(sort.value)
       sortFileList(sortKey, sortType)
     })
     .catch((e) => {
