@@ -7,7 +7,7 @@
     "start": "vercel dev -l 7896",
     "dev": "vite",
     "build:setup": "cp README.md public/setup-guide/index.md; bun run public/setup-guide/gen_markdown.js",
-    "build": "vite build",
+    "build": "bun run build:setup; vite build",
     "preview": "vite preview",
     "deploy": "bun run build:setup; vercel --prod",
     "clean": "rm -rf dist"
