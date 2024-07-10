@@ -208,6 +208,37 @@ This sounds a little bit complicated, let me break it down for you:
 2. To edit the name of queued files, just click on the file name.
 3. Rename the file like `folder/file.txt` will upload the `file.txt` to the folder, you'll get a folder structure in your bucket.
 
+### Running/Testing with Docker (and optionally, ngrok) 🐋
+
+1. From the source code directory build an image -
+
+```
+docker build -t r2-uploader
+```
+
+2. Run the image as a container -
+
+```
+docker run --name r2-uploader -p 7896:7896 r2-uploader
+```
+
+3. Optional, use ngrok to route a reverse proxy domain, mitigates cross origin failures when running locally -
+
+```
+# Install ngrok, see ngrok.com
+ngrok config add-authtoken <your_token>
+ngrok http http://localhost:7896
+# Navigate to the url provided
+```
+
+4. Cleanup
+
+```
+docker stop r2-uploader
+docker rm r2-uploader
+docker rmi r2-uploader
+```
+
 ---
 
 Ok now, I think we've covered everything, if you have any questions, feel free to create a new issue under [this repo](https://github.com/jw-12138/r2-uploader/issues).
