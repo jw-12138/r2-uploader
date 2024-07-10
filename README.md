@@ -44,6 +44,8 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
          return hasValidHeader(request, env)
        case 'PATCH':
          return hasValidHeader(request, env)
+       case 'POST':
+         return hasValidHeader(request, env);
        case 'GET':
          if (env.PRIVATE_BUCKET) {
            return hasValidHeader(request, env)
@@ -60,9 +62,75 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
      async fetch(request, env) {
        const url = new URL(request.url)
        const key = url.pathname.slice(1)
+       const action = url.searchParams.get("action");
        if (!authorizeRequest(request, env, key)) {
          return new Response('Forbidden', { status: 403 })
        }
+   
+       if (action) {
+         switch (request.method) {
+           case "POST":
+             if (action === "mpu-create") {
+               const multipartUpload = await env.R2_BUCKET.createMultipartUpload(key);
+               return new Response(JSON.stringify({
+                 key: multipartUpload.key,
+                 uploadId: multipartUpload.uploadId,
+               }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+             } else if (action === "mpu-complete") {
+               const uploadId = url.searchParams.get("uploadId");
+               if (!uploadId) {
+                 return new Response("Missing uploadId", { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } });
+               }
+               const multipartUpload = env.R2_BUCKET.resumeMultipartUpload(key, uploadId);
+               const completeBody = await request.json();
+               if (!completeBody || !completeBody.parts) {
+                 return new Response("Missing or incomplete body", {
+                   status: 400,
+                   headers: { 'Access-Control-Allow-Origin': '*' }
+                 });
+               }
+               try {
+                 const object = await multipartUpload.complete(completeBody.parts);
+                 return new Response(null, {
+                   status: 200,
+                   headers: {
+                     'Content-Type': 'application/json',
+                     'Access-Control-Allow-Origin': '*',
+                     'etag': object.httpEtag
+                   }
+                 });
+               } catch (error) {
+                 return new Response(error.message, { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } });
+               }
+             }
+             break;
+           case "PUT":
+             if (action === "mpu-uploadpart") {
+               const uploadId = url.searchParams.get("uploadId");
+               const partNumberString = url.searchParams.get("partNumber");
+               if (!uploadId || !partNumberString) {
+                 return new Response("Missing partNumber or uploadId", { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } });
+               }
+               const partNumber = parseInt(partNumberString, 10);
+               const multipartUpload = env.R2_BUCKET.resumeMultipartUpload(key, uploadId);
+               const uploadedPart = await multipartUpload.uploadPart(partNumber, request.body);
+               return new Response(JSON.stringify(uploadedPart), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+             }
+             break;
+           case "DELETE":
+             if (action === "mpu-abort") {
+               const uploadId = url.searchParams.get("uploadId");
+               if (!uploadId) {
+                 return new Response("Missing uploadId", { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } });
+               }
+               const multipartUpload = env.R2_BUCKET.resumeMultipartUpload(key, uploadId);
+               await multipartUpload.abort();
+               return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*' } });
+             }
+             break;
+         }
+       }
+   
        switch (request.method) {
          case 'PUT':
            await env.R2_BUCKET.put(key, request.body)
