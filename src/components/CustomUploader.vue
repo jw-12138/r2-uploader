@@ -620,13 +620,13 @@ function handlePaste() {
   })
 }
 
-function uploadFile(file) {
-  let endPoint = localStorage.getItem('endPoint')
-  let apiKey = localStorage.getItem('apiKey')
+async function uploadFile(file) {
+  const endPoint = localStorage.getItem('endPoint');
+  const apiKey = localStorage.getItem('apiKey');
 
   if (!endPoint || !apiKey) {
-    alert('Please set an endpoint and api key first.')
-    return
+    alert('Please set an endpoint and api key first.');
+    return;
   }
 
   if (file['compressing'] !== undefined) {
@@ -636,12 +636,11 @@ function uploadFile(file) {
   abortControllerMap.value[file.key] = new AbortController()
   statusMap.value[file.key] = 'uploading'
 
-  let file_key = renameFileWithRandomId.value ? file.id_key : file.key
+  const file_key = renameFileWithRandomId.value ? file.id_key : file.key;
+  const fileName = (endPoint[endPoint.length - 1] === '/') ? formatFileName(file_key) : '/' + formatFileName(file_key);
+  const url = endPoint + fileName;
+  const partSize = 100 * 1024 * 1024; // 100MB part size except for the last or only part
 
-  let fileName = '/' + formatFileName(file_key)
-  if (endPoint[endPoint.length - 1] === '/') {
-    fileName = formatFileName(file_key)
-  }
   file.startUploadingTime = new Date().getTime()
 
   realTimeSpeedRecords.value[file.key] = [
@@ -651,42 +650,76 @@ function uploadFile(file) {
     }
   ]
 
-  axios({
-    method: 'put',
-    url: endPoint + fileName,
-    headers: {
-      'x-api-key': apiKey,
-      'content-type': file.type
-    },
-    signal: abortControllerMap.value[file.key].signal,
-    data: file,
-    onUploadProgress(event) {
-      const percentage = Math.round((100 * event.loaded) / event.total)
-      progressMap.value[file.key] = percentage
+  try {
+    // Step 1: Create the multipart upload and retrieve the upload ID
+    const createResponse = await axios.post(url, null, {
+      params: { action: 'mpu-create' },
+      headers: { 'x-api-key': apiKey }
+    });
+    const uploadId = createResponse.data.uploadId;
+    let uploadedSize = 0; // Track the uploaded size for progress calculation
 
-      realTimeSpeedRecords.value[file.key].push({
-        time: new Date().getTime(),
-        loaded: event.loaded
-      })
+    // Step 2: Calculate the number of parts and prepare parts metadata
+    const totalParts = Math.ceil(file.size / partSize);
+    const parts = [];
+
+    for (let i = 0; i < totalParts; i++) {
+      const start = i * partSize;
+      const end = Math.min(start + partSize, file.size);
+      const blobPart = file.slice(start, end);
+
+      // Upload each part
+      const partResponse = await axios.put(url, blobPart, {
+        params: {
+          action: 'mpu-uploadpart',
+          uploadId: uploadId,
+          partNumber: i + 1
+        },
+        headers: {
+          'x-api-key': apiKey,
+          'Content-Type': file.type
+        },
+        signal: abortControllerMap.value[file.key].signal,
+        onUploadProgress: function (event) {
+          const currentPartProgress = event.loaded;
+          const totalLoaded = uploadedSize + currentPartProgress;
+          const progressPercentage = Math.round((100 * totalLoaded) / file.size);
+          progressMap.value[file.key] = progressPercentage
+
+          // Update real time records for speed calculation
+          realTimeSpeedRecords.value[file.key].push({
+            time: new Date().getTime(),
+            loaded: totalLoaded
+          });
+        }
+      });
+
+      uploadedSize += blobPart.size; // Update the uploaded size after each part completes
+
+      // Extract ETag from response body
+      const etag = partResponse.data.etag;
+      parts.push({ etag: etag, partNumber: i + 1 });
     }
-  })
-    .then((res) => {
-      statusMap.value[file.key] = 'done'
-      if (res.status === 200) {
-        file.endUploadingTime = new Date().getTime()
-        file.uploadUsedTime = file.endUploadingTime - file.startUploadingTime
-        file.uploadSpeed = calcUploadSpeed(file.size, file.uploadUsedTime)
-        uploadedList.value.push(file)
-        fileList.value = fileList.value.filter((item) => item.key !== file.key)
-      }
-    })
-    .catch((e) => {
-      console.log(e)
-      statusMap.value[file.key] = 'error'
-    })
-    .finally(() => {
-      doneUploadingCleanUp()
-    })
+
+    // Step 3: Complete the multipart upload
+    await axios.post(url, { parts }, {
+      params: { action: 'mpu-complete', uploadId: uploadId },
+      headers: { 'x-api-key': apiKey }
+    });
+
+    statusMap.value[file.key] = 'done';
+    file.endUploadingTime = new Date().getTime();
+    file.uploadUsedTime = file.endUploadingTime - file.startUploadingTime;
+    file.uploadSpeed = calcUploadSpeed(file.size, file.uploadUsedTime);
+    uploadedList.value.push(file);
+    fileList.value = fileList.value.filter((item) => item.key !== file.key);
+
+  } catch (error) {
+    console.error('Upload failed', error);
+    statusMap.value[file.key] = 'error'
+  } finally {
+    doneUploadingCleanUp();
+  }
 }
 
 let globalSpeed = ref('0B /s')
