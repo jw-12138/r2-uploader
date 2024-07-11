@@ -791,7 +791,24 @@ async function mpuUploadFile(file, data) {
     activeThreadCount++
   }
 
-  async function uploadParts(_p) {
+  async function uploadParts(_p, retryLeft = 5) {
+    if (retryLeft === 0) {
+      statusMap.value[file.key] = 'error'
+
+      abortControllerMap.value[file.key].forEach(s => {
+        try {
+          s.abort()
+        } catch (_) {}
+      })
+
+      file.uploading = false
+      file['mpuParts'] = 0
+      file['mpuDoneParts'] = 0
+
+      clearInterval(_s)
+      return false
+    }
+
     let part = _p.part
     let partNumber = _p.partNumber
 
@@ -801,19 +818,28 @@ async function mpuUploadFile(file, data) {
 
     abortControllerMap.value[file.key][partNumber] = new AbortController()
 
-    let res = await axios({
-      method: 'put',
-      url: endPoint + 'mpu/' + fileName + '?' + `uploadId=${uploadId}&partNumber=${partNumber}`,
-      headers: {
-        'x-api-key': apiKey,
-        'content-type': file.type
-      },
-      signal: abortControllerMap.value[file.key][partNumber].signal,
-      data: part,
-      onUploadProgress: function (event) {
-        totalLoaded += event.bytes
-      }
-    })
+    let res
+
+    try {
+      res = await axios({
+        method: 'put',
+        url: endPoint + 'mpu/' + fileName + '?' + `uploadId=${uploadId}&partNumber=${partNumber}`,
+        headers: {
+          'x-api-key': apiKey,
+          'content-type': file.type
+        },
+        signal: abortControllerMap.value[file.key][partNumber].signal,
+        data: part,
+        onUploadProgress: function (event) {
+          totalLoaded += event.bytes
+        }
+      })
+    } catch (e) {
+      setTimeout(async function(){
+        await uploadParts(_p, retryLeft - 1)
+      }, 500)
+      return false
+    }
 
     // release the thread
     activeThreadCount--
