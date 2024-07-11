@@ -137,7 +137,7 @@
               Compress images before uploading
             </label>
           </div>
-          <div v-show="compressImagesBeforeUploading" class="text-xs pt-4 pl-2">
+          <div v-if="compressImagesBeforeUploading" class="text-xs pt-4 pl-2">
             <div>
               <label for="removeEXIF" class="flex items-center"><input id="removeEXIF" type="checkbox" v-model="defaultCompressOptions.removeEXIF"> Remove EXIF</label>
             </div>
@@ -232,12 +232,15 @@
                 marginTop: editKey === item.key ? '0' : '0.25rem',
                 top: editKey !== item.key ? 0 : '-.2rem'
               }"
-            class="opacity-80 text-green-500 mt-1 inline-block relative"
+            class="opacity-80 text-green-500 mt-1 inline-block relative font-mono"
             :class="{
                 'text-red-500': statusMap[item.key] === 'error'
               }"
           >{{ parseByteSize(item.size) }}
-              <span v-show="uploading && !item.compressing"> / {{ progressMap[item.key] }}%</span><span v-show="item.compressing">Compressing...</span></span>
+              <span v-show="uploading && !item.compressing"> / {{ progressMap[item.key] }}%</span>
+              <span v-show="item.compressing">Compressing...</span>
+              <span v-show="item.splitting && item.isMpu">Splitting Chunks...</span>
+            </span>
           </div>
           <div
             v-show="editKey !== item.key"
@@ -261,7 +264,7 @@
 </template>
 
 <script setup>
-import {reactive, ref, watch, onMounted} from 'vue'
+import {onMounted, reactive, ref, watch} from 'vue'
 import axios from 'axios'
 import {useStatusStore} from '../store/status'
 import {nanoid} from 'nanoid'
@@ -352,7 +355,6 @@ let compressImage = async function (file) {
         newFile.id_key = file.id_key.split('.').shift() + '.' + extension
         newFile.key = file.key.split('.').shift() + '.' + extension
 
-        console.log(newFile)
         console.log(`compressed ${file.name} from ${parseByteSize(file.size)} to ${parseByteSize(newFile.size)}`)
         resolve(newFile)
       },
@@ -557,10 +559,28 @@ let removeThisFile = function (index, name) {
       return false
     }
 
-    abortControllerMap.value[name].abort()
-    fileList.value.splice(index, 1)
+    try {
+      if (abortControllerMap.value[name].length) {
 
-    doneUploadingCleanUp()
+        fileList.value[index].aborted = true
+
+        abortControllerMap.value[name].forEach(s => {
+          try {
+            s.abort()
+          } catch (_) {
+          }
+        })
+      } else {
+        abortControllerMap.value[name].abort()
+      }
+    } catch (e) {
+      console.log(e)
+    }
+
+    setTimeout(function () {
+      fileList.value.splice(index, 1)
+      doneUploadingCleanUp()
+    }, 100)
 
     return false
   }
@@ -620,9 +640,206 @@ function handlePaste() {
   })
 }
 
+async function abortMpu(data) {
+  let {uploadId, key, endPoint, apiKey} = data
+
+  let res = await axios({
+    method: 'delete',
+    url: endPoint + 'mpu/' + key + '?' + `uploadId=${uploadId}`,
+    headers: {
+      'x-api-key': apiKey
+    }
+  })
+}
+
+async function createMpu(key, data) {
+  const {fileName, endPoint, apiKey} = data
+  let res = await axios({
+    method: 'post',
+    url: endPoint + 'mpu/create/' + key,
+    headers: {
+      'x-api-key': apiKey
+    }
+  })
+
+  return res.data
+}
+
+async function completeMpu(file, data) {
+  const {endPoint, apiKey, uploadId, parts} = data
+
+  let res = await axios({
+    method: 'post',
+    url: endPoint + 'mpu/complete/' + file.key + '?' + `uploadId=${uploadId}`,
+    headers: {
+      'x-api-key': apiKey
+    },
+    data: {
+      parts
+    }
+  })
+
+  statusMap.value[file.key] = 'done'
+
+  file.endUploadingTime = new Date().getTime()
+  file.uploadUsedTime = file.endUploadingTime - file.startUploadingTime
+  file.uploadSpeed = calcUploadSpeed(file.size, file.uploadUsedTime)
+  uploadedList.value.push(file)
+  fileList.value = fileList.value.filter((item) => item.key !== file.key)
+
+  doneUploadingCleanUp()
+}
+
+async function remoteSupportMpu(endPoint) {
+  try {
+    await axios.get(endPoint + 'support_mpu')
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+async function mpuUploadFile(file, data) {
+  console.log(`file size is ${file.size}, switching to mpu`)
+
+  const {fileName, endPoint, apiKey} = data
+  file['isMpu'] = true
+
+  let remoteSupport = await remoteSupportMpu(endPoint)
+
+  if (!remoteSupport) {
+    alert(`R2 workers has refactored its code to support big file uploading, please see the new setup guide at https://r2.jw1.dev/setup-guide`)
+    return false
+  }
+
+  let mpu = await createMpu(fileName, data)
+  let uploadId = mpu.uploadId
+
+  const partSize = 1024 * 1024 * 10
+  const predictedParts = Math.ceil(file.size / partSize)
+  const parts = []
+  const maxThreads = 5
+  const completedParts = []
+  const activePartsSpeed = {}
+
+  let totalLoaded = 0
+  let activeThreadCount = 0
+
+  abortControllerMap.value[file.key] = []
+
+  let split_i = 0
+
+  while (parts.length < predictedParts) {
+    file['splitting'] = true
+    const start = split_i * partSize
+    const end = Math.min(file.size, (split_i + 1) * partSize)
+    const part = file.slice(start, end)
+    parts.push(part)
+
+    // async splitting, so the UI won't freeze
+    await new Promise(r => setTimeout(r, 0))
+    split_i++
+  }
+  file['splitting'] = false
+
+  let _s = setInterval(function () {
+    if (completedParts.length === parts.length || file.aborted) {
+      clearInterval(_s)
+      return false
+    }
+
+    realTimeSpeedRecords.value[file.key].push({
+      time: new Date().getTime(),
+      loaded: totalLoaded
+    })
+
+    file['mpuParts'] = parts.length
+    file['mpuDoneParts'] = completedParts.length
+
+    progressMap.value[file.key] = ((totalLoaded / file.size) * 100).toFixed(1)
+  }, 100)
+
+  for (let i = 0; i < parts.length; i++) {
+    let part = parts[i]
+    let partNumber = i + 1
+
+    if (file.aborted === true) {
+      setTimeout(async function () {
+        await abortMpu({
+          uploadId,
+          key: fileName,
+          endPoint,
+          apiKey
+        })
+      }, 500)
+      break
+    }
+
+    // threads full, wait here
+    if (activeThreadCount >= maxThreads) {
+      await new Promise(resolve => setTimeout(resolve, 30))
+      i--
+      continue
+    }
+
+    // do not use await here
+    uploadParts({
+      part,
+      partNumber
+    })
+
+    activeThreadCount++
+  }
+
+  async function uploadParts(_p) {
+    let part = _p.part
+    let partNumber = _p.partNumber
+
+    if (!activePartsSpeed[partNumber]) {
+      activePartsSpeed[partNumber] = []
+    }
+
+    abortControllerMap.value[file.key][partNumber] = new AbortController()
+
+    let res = await axios({
+      method: 'put',
+      url: endPoint + 'mpu/' + fileName + '?' + `uploadId=${uploadId}&partNumber=${partNumber}`,
+      headers: {
+        'x-api-key': apiKey,
+        'content-type': file.type
+      },
+      signal: abortControllerMap.value[file.key][partNumber].signal,
+      data: part,
+      onUploadProgress: function (event) {
+        totalLoaded += event.bytes
+      }
+    })
+
+    // release the thread
+    activeThreadCount--
+
+    completedParts.push({
+      partNumber,
+      etag: res.data.etag
+    })
+
+    // remove abort signal
+    abortControllerMap.value[file.key][partNumber] = null
+
+    if (completedParts.length === parts.length) {
+      await completeMpu(file, {
+        endPoint,
+        apiKey,
+        uploadId,
+        parts: completedParts
+      })
+    }
+  }
+}
+
 function uploadFile(file) {
-  let endPoint = localStorage.getItem('endPoint')
-  let apiKey = localStorage.getItem('apiKey')
+  const endPoint = localStorage.getItem('endPoint')
+  const apiKey = localStorage.getItem('apiKey')
 
   if (!endPoint || !apiKey) {
     alert('Please set an endpoint and api key first.')
@@ -632,6 +849,7 @@ function uploadFile(file) {
   if (file['compressing'] !== undefined) {
     file.compressing = false
   }
+
   progressMap.value[file.key] = 0
   abortControllerMap.value[file.key] = new AbortController()
   statusMap.value[file.key] = 'uploading'
@@ -651,6 +869,15 @@ function uploadFile(file) {
     }
   ]
 
+  if (file.size > 1024 * 1024 * 95) {
+    mpuUploadFile(file, {
+      fileName,
+      endPoint,
+      apiKey
+    })
+    return false
+  }
+
   axios({
     method: 'put',
     url: endPoint + fileName,
@@ -661,8 +888,7 @@ function uploadFile(file) {
     signal: abortControllerMap.value[file.key].signal,
     data: file,
     onUploadProgress(event) {
-      const percentage = Math.round((100 * event.loaded) / event.total)
-      progressMap.value[file.key] = percentage
+      progressMap.value[file.key] = ((100 * event.loaded) / event.total).toFixed(1)
 
       realTimeSpeedRecords.value[file.key].push({
         time: new Date().getTime(),
