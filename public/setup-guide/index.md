@@ -1,8 +1,13 @@
-<span style="font-size: .8rem">Last updated: 2023-09-12</span>
+<span style="font-size: .8rem">Last updated: 2024-07-11</span>
 
 ### Why this tool? 🤔
 
-In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing platform with generous free tier. It is a great alternative to AWS S3, especially for small projects and personal use. However, Cloudflare dashboard could only upload files smaller than 300MB, which is not ideal for large files. This tool is a simple web interface for R2, which allows you to manage your files in R2 buckets.
+In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing platform with generous free tier. It is a great alternative to AWS S3, especially for small projects and personal use. You can use the Cloudflare R2 dashboard to upload files directly, but it's kinda painful to use, this tool aims to solve these problems for the R2 users:
+
+- Upload big files, R2 dashboard could only upload files which size is smaller than 300Mb, R2 Uploader can handle the upload for a single file up to 100Gb in theory (huge thanks to [@spurin](https://github.com/spurin)).
+- Image compression, lots of users would just use R2 as a CDN, so we added image compression to make the images load faster.
+- Easily jump between multiple buckets, setup multiple workers for different buckets, and switch between them easily.
+  - Sync endpoints across devices safely, you can login with GitHub and sync your data, all data is AES encrypted before sending to the server.
 
 ### Requirements ☝️
 
@@ -28,103 +33,11 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
 2. On the left panel, there is a section called "Workers & Pages". Click on it.
 3. Click on the "Create Application" button and the click on the "Create Worker" button.
 4. So now Cloudflare will automatically generate a name for your Worker, you can either enter a name you like or leave it as it is. Ignore that code preview section, and now click the "Deploy" button.
-5. Click on the button "Edit code", now you will see a code editor, delete all the code in it and paste the code below:
-
-   <details><summary>Expand the code</summary>
-
-   ```js
-   var hasValidHeader = (request, env) => {
-     return request.headers.get('x-api-key') === env.AUTH_KEY_SECRET
-   }
-   function authorizeRequest(request, env, key) {
-     switch (request.method) {
-       case 'PUT':
-         return hasValidHeader(request, env)
-       case 'DELETE':
-         return hasValidHeader(request, env)
-       case 'PATCH':
-         return hasValidHeader(request, env)
-       case 'GET':
-         if (env.PRIVATE_BUCKET) {
-           return hasValidHeader(request, env)
-         } else {
-           return true
-         }
-       case 'OPTIONS':
-         return true
-       default:
-         return false
-     }
-   }
-   var worker_default = {
-     async fetch(request, env) {
-       const url = new URL(request.url)
-       const key = url.pathname.slice(1)
-       if (!authorizeRequest(request, env, key)) {
-         return new Response('Forbidden', { status: 403 })
-       }
-       switch (request.method) {
-         case 'PUT':
-           await env.R2_BUCKET.put(key, request.body)
-           return new Response(`Put ${key} successfully!`, {
-             headers: {
-               'Access-Control-Allow-Origin': '*'
-             }
-           })
-         case 'PATCH':
-           let list = await env.R2_BUCKET.list()
-           return new Response(JSON.stringify(list), {
-             headers: {
-               'Content-Type': 'application/json',
-               'Access-Control-Allow-Origin': '*'
-             }
-           })
-         case 'GET':
-           const object = await env.R2_BUCKET.get(key)
-           if (object === null) {
-             return new Response('Object Not Found', { status: 404 })
-           }
-           const headers = new Headers()
-           object.writeHttpMetadata(headers)
-           headers.set('etag', object.httpEtag)
-           headers.set('Access-Control-Allow-Origin', '*')
-           return new Response(object.body, {
-             headers
-           })
-         case 'DELETE':
-           await env.R2_BUCKET.delete(key)
-           return new Response('Deleted!', {
-             headers: {
-               'Access-Control-Allow-Origin': '*'
-             }
-           })
-         case 'OPTIONS':
-           return new Response(null, {
-             headers: {
-               'Access-Control-Allow-Origin': '*',
-               'Access-Control-Allow-Methods':
-                 'PUT, PATCH, GET, DELETE, OPTIONS',
-               'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
-             }
-           })
-         default:
-           return new Response('Method Not Allowed', {
-             status: 405,
-             headers: {
-               'Access-Control-Allow-Methods':
-                 'PUT, PATCH, GET, DELETE, OPTIONS',
-               'Access-Control-Allow-Origin': '*'
-             }
-           })
-       }
-     }
-   }
-   export { worker_default as default }
-   ```
-
-   </details>
+5. Click on the button "Edit code", now you will see a code editor, paste the js file's code into the editor: [worker.js](https://raw.githubusercontent.com/jw-12138/r2-uploader-example-worker/main/dist/worker.js).  
+   This is worker also [open sourced](https://github.com/jw-12138/r2-uploader-example-worker), you can always [build the code yourself](https://github.com/jw-12138/r2-uploader-example-worker?tab=readme-ov-file#how-to-use).
 
 6. Now click on the "Save and Deploy" button, you will see a URL on top of the page, copy it to somewhere like a notepad, **we will need it later**.
+
 7. Go to the worker page, go to the "Settings" and then click the "Variable" on the left side.
 
    ![](https://r2-cf-api.jw1.dev/r2_page.png)
@@ -137,7 +50,7 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
 
    ![](https://r2-cf-api.jw1.dev/r2_bindings_to_worker.png)
 
-If you go to the Worker URL now, you will see a "Object Not Found" message, that means the worker is working as expected.
+If you go to the Worker URL now, you will see a "Hello R2!" message, that means the worker is working as expected.
 
 Now we have set up the worker, we can now set up the uploader.
 
@@ -163,7 +76,7 @@ R2 Uploader **does not** store your Endpoints or API keys in the cloud, it is st
 
 ### For private use 🔒
 
-At default, the Worker will allow all the GET requests to go through, which means anyone can access your file if they know the URL.
+By default, the Worker will allow all the GET requests to go through, which means anyone can access your file if they know the URL.
 
 If you want to make your bucket private, you can do so by adding a new variable in the Worker settings.
 
@@ -201,6 +114,39 @@ Workers and R2 both supports custom domain, and we just need one of them to make
 This sounds a little bit complicated, let me break it down for you:
 
 - Setting up a custom domain for Workers is the simplest way to work with R2 Uploader
+
+### Running/Testing with Docker (and optionally, ngrok) 🐋
+
+**Contributor:** [@spurin](https://github.com/spurin)
+
+1. build an image from the source code directory
+
+   ```shell
+   docker build -t r2-uploader
+   ```
+
+2. Run the image as a container
+
+   ```shell
+   docker run --name r2-uploader -p 7896:7896 r2-uploader
+   ```
+
+3. Optional, use ngrok to route a reverse proxy domain, mitigates cross origin failures when running locally -
+
+   ```shell
+   # Install ngrok, see ngrok.com
+   ngrok config add-authtoken <your_token>
+   ngrok http http://localhost:7896
+   # Navigate to the url provided
+   ```
+
+4. Cleanup
+
+   ```shell
+   docker stop r2-uploader
+   docker rm r2-uploader
+   docker rmi r2-uploader
+   ```
 
 ### Hidden features 😜
 
