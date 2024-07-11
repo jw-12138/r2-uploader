@@ -4,10 +4,10 @@
 
 In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing platform with generous free tier. It is a great alternative to AWS S3, especially for small projects and personal use. You can use the Cloudflare R2 dashboard to upload files directly, but it's kinda painful to use, this tool aims to solve these problems for the R2 users:
 
-- Upload big files, R2 dashboard could only upload files which size is smaller than 300Mb, R2 Uploader can handle the upload for a single file up to 100Gb in theory (huge thanks to [@spurin](https://github.com/spurin)).
-- Image compression, lots of users would just use R2 as a CDN, so we added this function to make the images load faster.
-- Easily jump between multiple buckets, setup multiple workers for different buckets, and switch between them easily.
-  - Sync endpoints across devices safely, you can login with GitHub and sync your data, all data is AES encrypted before sending to the server.
+- **Upload big files**, R2 dashboard could only upload files which size is smaller than 300Mb, R2 Uploader can handle the upload for a single file up to 100Gb in theory (huge thanks to [@spurin](https://github.com/spurin)).
+- **Image compression**, lots of users would just use R2 as a CDN, so we added this function to make the images load faster.
+- **Easily jump between multiple buckets**, setup multiple workers for different buckets, and switch between them fast.
+- **Sync configs across devices safely**, you can login with GitHub and sync your configs, all data is AES encrypted locally before sending to the server.
 
 ### Requirements ☝️
 
