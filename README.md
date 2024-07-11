@@ -5,7 +5,7 @@
 In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing platform with generous free tier. It is a great alternative to AWS S3, especially for small projects and personal use. You can use the Cloudflare R2 dashboard to upload files directly, but it's kinda painful to use, this tool aims to solve these problems for the R2 users:
 
 - Upload big files, R2 dashboard could only upload files which size is smaller than 300Mb, R2 Uploader can handle the upload for a single file up to 100Gb in theory (huge thanks to [@spurin](https://github.com/spurin)).
-- Image compression, lots of users would just use R2 as a CDN, so we added image compression to make the images load faster.
+- Image compression, lots of users would just use R2 as a CDN, so we added this function to make the images load faster.
 - Easily jump between multiple buckets, setup multiple workers for different buckets, and switch between them easily.
   - Sync endpoints across devices safely, you can login with GitHub and sync your data, all data is AES encrypted before sending to the server.
 
@@ -33,8 +33,8 @@ A Worker is like the backend of a website, it allows the R2 Uploader to communic
 2. On the left panel, there is a section called "Workers & Pages". Click on it.
 3. Click on the "Create Application" button and the click on the "Create Worker" button.
 4. So now Cloudflare will automatically generate a name for your Worker, you can either enter a name you like or leave it as it is. Ignore that code preview section, and now click the "Deploy" button.
-5. Click on the button "Edit code", now you will see a code editor, paste the js file's code into the editor: [worker.js](https://raw.githubusercontent.com/jw-12138/r2-uploader-example-worker/main/dist/worker.js).  
-   This is worker also [open sourced](https://github.com/jw-12138/r2-uploader-example-worker), you can always [build the code yourself](https://github.com/jw-12138/r2-uploader-example-worker?tab=readme-ov-file#how-to-use).
+5. Click on the button "Edit code", now you will see a code editor, paste code from this js file: [worker.js](https://raw.githubusercontent.com/jw-12138/r2-uploader-example-worker/main/dist/worker.js).  
+   This is also [open sourced](https://github.com/jw-12138/r2-uploader-example-worker), you can always [build the code yourself](https://github.com/jw-12138/r2-uploader-example-worker?tab=readme-ov-file#how-to-use).
 
 6. Now click on the "Save and Deploy" button, you will see a URL on top of the page, copy it to somewhere like a notepad, **we will need it later**.
 
