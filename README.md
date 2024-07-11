@@ -131,7 +131,7 @@ This sounds a little bit complicated, let me break it down for you:
    docker run --name r2-uploader -p 7896:7896 r2-uploader
    ```
 
-3. Optional, use ngrok to route a reverse proxy domain, mitigates cross origin failures when running locally -
+3. Optional, use ngrok to route a reverse proxy domain, mitigates cross origin failures when running locally
 
    ```shell
    # Install ngrok, see ngrok.com
