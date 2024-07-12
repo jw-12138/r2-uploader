@@ -71,31 +71,37 @@
         <div
           class="rounded-lg mb-2"
           :class="seeFolderStructure ? 'bg-neutral-50 dark:bg-[#333] p-2 shadow' : ''"
-          v-for="folder in Object.keys(dirMap)"
+          v-for="folder in Object.keys(dirMap).map(el => {
+            return {
+              name: el,
+              timestamp: Date.now()
+            }
+          })"
+          :key="nanoid() + folder.timestamp"
         >
           <details open class="mb-0 pb-1">
             <summary class="text-xs" v-show="seeFolderStructure">
-              {{ folder }}/
+              {{ folder.name }}/
             </summary>
 
             <div class="mb-2 text-xs" v-show="selectMode">
 
-              <label :for="folder + '/'"><input
+              <label :for="folder.name + '/'"><input
                 class="mr-2"
                 type="checkbox"
-                :id="folder + '/'"
-                @change="handleFolderSelect(folder)"
+                :id="folder.name + '/'"
+                @change="handleFolderSelect(folder.name)"
               /> Select All</label>
             </div>
             <div
               class="item mb-2 rounded text-sm py-1 flex items-center justify-between"
               :class="seeFolderStructure ? 'pl-4' : ''"
-              v-for="item in dirMap[folder]"
+              v-for="item in dirMap[folder.name]"
             >
               <div class="w-[2rem]" v-show="selectMode">
                 <input
                   type="checkbox"
-                  @change="updateSelectedFiles(item, folder)"
+                  @change="updateSelectedFiles(item, folder.name)"
                   v-model="item.selected"
                   :id="item.key"
                 />
@@ -147,6 +153,7 @@ import {onMounted, ref, watch} from 'vue'
 import axios from 'axios'
 import {useStatusStore} from '../store/status'
 import {storeToRefs} from 'pinia'
+import {nanoid} from 'nanoid'
 
 let sort = ref('0')
 
@@ -155,7 +162,7 @@ onMounted(() => {
     seeFolderStructure.value = true
   }
 
-  if(localStorage.getItem('seeFolderStructure') === '0'){
+  if (localStorage.getItem('seeFolderStructure') === '0') {
     seeFolderStructure.value = false
   }
 })
@@ -376,31 +383,27 @@ async function parseDirs(file) {
 
     let dirKey = dirs.join('/')
 
+    let item = {
+      fileName: fileName,
+      key: file.key
+    }
     if (dirMap.value[dirKey]) {
-      dirMap.value[dirKey].push({
-        fileName: fileName,
-        key: file.key
-      })
+      dirMap.value[dirKey].push(item)
     } else {
       dirMap.value[dirKey] = [
-        {
-          fileName: fileName,
-          key: file.key
-        }
+        item
       ]
     }
   } else {
+    let item = {
+      fileName: file.key,
+      key: file.key
+    }
     if (dirMap.value['/']) {
-      dirMap.value['/'].push({
-        fileName: file.key,
-        key: file.key
-      })
+      dirMap.value['/'].push(item)
     } else {
       dirMap.value['/'] = [
-        {
-          fileName: file.key,
-          key: file.key
-        }
+        item
       ]
     }
   }
