@@ -150,6 +150,16 @@ import {storeToRefs} from 'pinia'
 
 let sort = ref('0')
 
+onMounted(() => {
+  if (localStorage.getItem('seeFolderStructure') === '1') {
+    seeFolderStructure.value = true
+  }
+
+  if(localStorage.getItem('seeFolderStructure') === '0'){
+    seeFolderStructure.value = false
+  }
+})
+
 watch(sort, function (val) {
   localStorage.setItem('sort', val)
 
@@ -397,6 +407,7 @@ async function parseDirs(file) {
 }
 
 watch(seeFolderStructure, async () => {
+  localStorage.setItem('seeFolderStructure', seeFolderStructure.value ? '1' : '0')
   dirMap.value = {}
   reconstructing.value = true
 
