@@ -77,19 +77,19 @@
               timestamp: Date.now()
             }
           })"
-          :key="nanoid() + folder.timestamp"
+          :key="folder.name + '_' + structureId"
         >
           <details open class="mb-0 pb-1">
             <summary class="text-xs" v-show="seeFolderStructure">
-              {{ folder.name }}/
+              {{ folder.name }}
             </summary>
 
-            <div class="mb-2 text-xs" v-show="selectMode">
-
-              <label :for="folder.name + '/'"><input
+            <div class="mb-2 text-xs" v-show="selectMode" @mouseenter="mouseOnSelectionCheckbox = true" @mouseleave="mouseOnSelectionCheckbox = false">
+              <label :for="folder.name"><input
+                name="select_all_for_folder"
                 class="mr-2"
                 type="checkbox"
-                :id="folder.name + '/'"
+                :id="folder.name"
                 @change="handleFolderSelect(folder.name)"
               /> Select All</label>
             </div>
@@ -170,13 +170,7 @@ onMounted(() => {
 watch(sort, function (val) {
   localStorage.setItem('sort', val)
 
-  if (val === '0') {
-    sortFileList()
-    return false
-  }
-
-  let {sortKey, sortType} = getSortVariables(val)
-  sortFileList(sortKey, sortType)
+  mapFilesToDir()
 })
 
 function getSortVariables(val) {
@@ -201,15 +195,6 @@ function getSortVariables(val) {
 }
 
 let sortFileList = function (sortKey, sortType) {
-  if (!sortKey) {
-    dirMap.value = {}
-    fileList.value.forEach((item) => {
-      parseDirs(item)
-    })
-
-    return false
-  }
-
   let temp = JSON.parse(JSON.stringify(fileList.value))
   temp.map((el) => {
     return (el.uploaded_timestamp = new Date(el.uploaded).getTime())
@@ -223,10 +208,7 @@ let sortFileList = function (sortKey, sortType) {
     }
   })
 
-  dirMap.value = {}
-  temp.forEach((item) => {
-    parseDirs(item)
-  })
+  return temp
 }
 
 let statusStore = useStatusStore()
@@ -273,7 +255,7 @@ let loading = ref(false)
 
 function handleFolderSelect(folder) {
   let files = dirMap.value[folder]
-  let isInputChecked = document.getElementById(folder + '/').checked
+  let isInputChecked = document.getElementById(folder).checked
 
   if (isInputChecked) {
     files.forEach((file) => {
@@ -288,6 +270,8 @@ function handleFolderSelect(folder) {
   }
 }
 
+let mouseOnSelectionCheckbox = ref(false)
+
 function updateSelectedFiles(file, folder) {
   if (file.selected) {
     selectedFiles.value.push(file)
@@ -297,10 +281,13 @@ function updateSelectedFiles(file, folder) {
     )
   }
 
-  if (folder !== undefined) {
+  if (folder !== undefined && !mouseOnSelectionCheckbox.value) {
     let files = dirMap.value[folder]
     let isAllSelected = files.every((item) => item.selected)
-    document.getElementById(folder + '/').checked = isAllSelected
+    console.log('isAllSelected', isAllSelected)
+    console.log('document.getElementById(folder)', document.getElementById(folder))
+    document.getElementById(folder).checked = isAllSelected
+    console.log('document.getElementById(folder).checked', document.getElementById(folder).checked)
   }
 }
 
@@ -359,9 +346,14 @@ function toggleSelectMode() {
 
 function clearSelection() {
   selectedFiles.value = []
+
+  document.querySelectorAll('input[type="checkbox"][name="select_all_for_folder"]').forEach(el => {
+    el.checked = false
+  })
+
   let folders = Object.keys(dirMap.value)
   folders.forEach((folder) => {
-    document.getElementById(folder + '/').checked = false
+    document.getElementById(folder).checked = false
     let files = dirMap.value[folder]
     files.forEach((file) => {
       file.selected = false
@@ -381,7 +373,7 @@ async function parseDirs(file) {
 
     dirs = dirs.slice(0, dirs.length - 1)
 
-    let dirKey = dirs.join('/')
+    let dirKey = dirs.join('/') + '/'
 
     let item = {
       fileName: fileName,
@@ -409,12 +401,16 @@ async function parseDirs(file) {
   }
 }
 
-watch(seeFolderStructure, async () => {
-  localStorage.setItem('seeFolderStructure', seeFolderStructure.value ? '1' : '0')
+async function mapFilesToDir() {
   dirMap.value = {}
   reconstructing.value = true
 
   let start = Date.now()
+
+  let {sortKey, sortType} = getSortVariables(sort.value)
+  let temp = sortFileList(sortKey, sortType)
+
+  fileList.value = temp
 
   await Promise.all(fileList.value.map(async (item) => {
     await parseDirs(item)
@@ -423,7 +419,15 @@ watch(seeFolderStructure, async () => {
   let end = Date.now()
 
   reconstructing.value = false
+
   console.log('reconstructed dirMap, took ', end - start, 'ms')
+}
+
+let structureId = nanoid()
+watch(seeFolderStructure, async () => {
+  structureId = nanoid()
+  localStorage.setItem('seeFolderStructure', seeFolderStructure.value ? '1' : '0')
+  await mapFilesToDir()
 })
 
 let deletingKey = ref('')
@@ -452,16 +456,10 @@ let deleteThisFile = function (key, isBatchDelete = false, options = {}) {
     },
     url: endPoint + fileName
   })
-    .then(() => {
+    .then(async () => {
       deletingKey.value = ''
       fileList.value = fileList.value.filter((item) => item.key !== key)
-      dirMap.value = {}
-      fileList.value.forEach((item) => {
-        parseDirs(item)
-      })
-
-      let {sortKey, sortType} = getSortVariables(sort.value)
-      sortFileList(sortKey, sortType)
+      await mapFilesToDir()
 
       if (options.callback) {
         options.callback()
@@ -504,7 +502,7 @@ let loadData = async function (action) {
     },
     url: endPoint + (action === 'more' && globalCursor.value ? '?cursor=' + globalCursor.value : '')
   })
-    .then((res) => {
+    .then(async (res) => {
       loading.value = false
 
       if (globalCursor.value && action === 'more') {
@@ -519,15 +517,9 @@ let loadData = async function (action) {
         globalCursor.value = ''
       }
 
-      dirMap.value = {}
-      fileList.value.forEach((item) => {
-        parseDirs(item)
-      })
-
       restoreSortSelection()
 
-      let {sortKey, sortType} = getSortVariables(sort.value)
-      sortFileList(sortKey, sortType)
+      await mapFilesToDir()
     })
     .catch((e) => {
       loading.value = false
@@ -536,6 +528,9 @@ let loadData = async function (action) {
       loadDataErrorText.value = `[${errorJson.message}], please check your endpoint and API key.`
       loadDataErrorStack.value = errorJson.stack
       return false
+    })
+    .finally(() => {
+      clearSelection()
     })
 }
 
