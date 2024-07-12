@@ -69,8 +69,8 @@
 
       <div>
         <div
-          class="rounded-lg mb-2 shadow"
-          :class="seeFolderStructure ? 'bg-neutral-50 dark:bg-[#333] p-2' : ''"
+          class="rounded-lg mb-2"
+          :class="seeFolderStructure ? 'bg-neutral-50 dark:bg-[#333] p-2 shadow' : ''"
           v-for="folder in Object.keys(dirMap)"
         >
           <details open class="mb-0 pb-1">
