@@ -45,13 +45,14 @@
         ><code class="text-xs">{{ loadDataErrorStack }}</code></pre>
       </div>
       <div class="text-xs mb-4" v-show="fileList.length > 0">
-        {{ fileList.length }} File{{ fileList.length === 1 ? '' : 's' }},
+        <span class="font-bold">{{ globalCursor ? 'More than' : '' }}</span> {{ fileList.length }} file{{ fileList.length === 1 ? '' : 's' }},
         {{ parseByteSize(allFileSize) }} total.
+        <button class="inline outline px-2 py-1 text-xs w-auto mb-0" v-show="globalCursor" @click="loadData('more')" :aria-busy="loading">Load more</button>
       </div>
 
       <div class="text-xs mb-2" v-show="fileList.length > 0">
         Sort by
-        <select class="text-xs inline-block w-[10rem]" v-model="sort">
+        <select class="text-xs inline-block w-[10rem] mb-0" v-model="sort">
           <option value="0">Default</option>
           <option value="1">Date(newest first)</option>
           <option value="2">Date(oldest first)</option>
@@ -60,26 +61,35 @@
         </select>
       </div>
 
+      <div class="pb-4" v-show="fileList.length > 0">
+        <label for="seeFolderStructure" class="text-xs" :aria-busy="reconstructing">
+          <input type="checkbox" id="seeFolderStructure" v-model="seeFolderStructure" class="mr-2" :disabled="reconstructing"> Folder Structure
+        </label>
+      </div>
+
       <div>
         <div
-          class="bg-neutral-50 dark:bg-[#333] rounded p-2 mb-2 shadow"
+          class="rounded-lg mb-2 shadow"
+          :class="seeFolderStructure ? 'bg-neutral-50 dark:bg-[#333] p-2' : ''"
           v-for="folder in Object.keys(dirMap)"
         >
           <details open class="mb-0 pb-1">
-            <summary class="text-xs">
+            <summary class="text-xs" v-show="seeFolderStructure">
               {{ folder }}/
             </summary>
 
             <div class="mb-2 text-xs" v-show="selectMode">
-              <input
+
+              <label :for="folder + '/'"><input
+                class="mr-2"
                 type="checkbox"
                 :id="folder + '/'"
                 @change="handleFolderSelect(folder)"
-              />
-              <label :for="folder + '/'">Select All</label>
+              /> Select All</label>
             </div>
             <div
-              class="item mb-2 rounded text-sm pl-4 py-1 flex items-center justify-between"
+              class="item mb-2 rounded text-sm py-1 flex items-center justify-between"
+              :class="seeFolderStructure ? 'pl-4' : ''"
               v-for="item in dirMap[folder]"
             >
               <div class="w-[2rem]" v-show="selectMode">
@@ -343,30 +353,64 @@ function clearSelection() {
 }
 
 let dirMap = ref({})
+let seeFolderStructure = ref(true)
+let reconstructing = ref(false)
 
-function parseDirs(file) {
-  let dirs = file.key.split('/')
+async function parseDirs(file) {
+  if (seeFolderStructure.value) {
+    let dirs = file.key.split('/')
 
-  let fileName = dirs[dirs.length - 1]
+    let fileName = dirs[dirs.length - 1]
 
-  dirs = dirs.slice(0, dirs.length - 1)
+    dirs = dirs.slice(0, dirs.length - 1)
 
-  let dirKey = dirs.join('/')
+    let dirKey = dirs.join('/')
 
-  if (dirMap.value[dirKey]) {
-    dirMap.value[dirKey].push({
-      fileName: fileName,
-      key: file.key
-    })
-  } else {
-    dirMap.value[dirKey] = [
-      {
+    if (dirMap.value[dirKey]) {
+      dirMap.value[dirKey].push({
         fileName: fileName,
         key: file.key
-      }
-    ]
+      })
+    } else {
+      dirMap.value[dirKey] = [
+        {
+          fileName: fileName,
+          key: file.key
+        }
+      ]
+    }
+  } else {
+    if (dirMap.value['/']) {
+      dirMap.value['/'].push({
+        fileName: file.key,
+        key: file.key
+      })
+    } else {
+      dirMap.value['/'] = [
+        {
+          fileName: file.key,
+          key: file.key
+        }
+      ]
+    }
   }
 }
+
+watch(seeFolderStructure, async () => {
+  dirMap.value = {}
+  reconstructing.value = true
+
+  let start = Date.now()
+
+  await Promise.all(fileList.value.map(async (item) => {
+    await parseDirs(item)
+  }))
+
+  let end = Date.now()
+
+  reconstructing.value = false
+  console.log('reconstructed dirMap, took ', end - start, 'ms')
+})
 
 let deletingKey = ref('')
 let deleteThisFile = function (key, isBatchDelete = false, options = {}) {
@@ -426,7 +470,10 @@ watch(fileList, (newVal) => {
 
 let loadDataErrorText = ref('')
 let loadDataErrorStack = ref('')
-let loadData = async function () {
+
+let globalCursor = ref('')
+
+let loadData = async function (action) {
   loading.value = true
   loadDataErrorText.value = ''
   loadDataErrorStack.value = ''
@@ -441,12 +488,22 @@ let loadData = async function () {
     headers: {
       'x-api-key': apiKey
     },
-    url: endPoint
+    url: endPoint + (action === 'more' && globalCursor.value ? '?cursor=' + globalCursor.value : '')
   })
     .then((res) => {
       loading.value = false
 
-      fileList.value = res.data.objects
+      if (globalCursor.value && action === 'more') {
+        fileList.value.push(...res.data.objects)
+      } else {
+        fileList.value = res.data.objects
+      }
+
+      if (res.data.truncated && res.data.cursor) {
+        globalCursor.value = res.data.cursor
+      } else {
+        globalCursor.value = ''
+      }
 
       dirMap.value = {}
       fileList.value.forEach((item) => {
