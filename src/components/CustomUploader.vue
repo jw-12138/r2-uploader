@@ -667,10 +667,11 @@ async function createMpu(key, data) {
 
 async function completeMpu(file, data) {
   const {endPoint, apiKey, uploadId, parts} = data
+  let fileKey = renameFileWithRandomId.value ? file.id_key : file.key;
 
   let res = await axios({
     method: 'post',
-    url: endPoint + 'mpu/complete/' + file.key + '?' + `uploadId=${uploadId}`,
+    url: endPoint + 'mpu/complete/' + fileKey + '?' + `uploadId=${uploadId}`,
     headers: {
       'x-api-key': apiKey
     },
