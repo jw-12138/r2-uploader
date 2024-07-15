@@ -1,7 +1,7 @@
 <template>
   <div>
     <form action="javascript:">
-      <div class="font-bold italic"> Upload Files</div>
+      <div class="font-bold italic">Upload Files</div>
       <div>
         <label
           for="fileInput"
@@ -9,7 +9,7 @@
           :style="{
             opacity: uploading ? 0.5 : 1
           }"
-        >{{ chooseFileBtnText }}
+          >{{ chooseFileBtnText }}
         </label>
 
         <label
@@ -19,7 +19,7 @@
             opacity: uploading ? 0.5 : 1
           }"
           @click="handleFolder"
-        >Choose Folder 📂</label
+          >Choose Folder 📂</label
         >
 
         <input
@@ -36,48 +36,33 @@
           class="inline-block w-auto shadow transition-all hover:shadow-xl hover:rounded-3xl"
           @click="upload"
           :disabled="uploading"
-        >🔥 Upload
-        </button
         >
+          🔥 Upload
+        </button>
       </div>
       <div>
-        <div class="text-xs opacity-50 mb-2"
-        >{{ fileList.length }} File{{ fileList.length === 1 ? '' : 's' }},
-          {{ parseByteSize(allFileSize) }} total.
+        <div class="text-xs opacity-50 mb-2">
+          {{ fileList.length }} File{{ fileList.length === 1 ? '' : 's' }}, {{ parseByteSize(allFileSize) }} total.
           <span v-show="skipFilesWithTheSameName && !uploading">
             Will skip
-            <span v-show="calcSkipFiles() === fileList.length && !uploading"
-            >all.
-            </span>
+            <span v-show="calcSkipFiles() === fileList.length && !uploading">all. </span>
             <span v-show="calcSkipFiles() !== fileList.length"
-            >{{ calcSkipFiles() }} file{{ calcSkipFiles() === 1 ? '' : 's' }}.
+              >{{ calcSkipFiles() }} file{{ calcSkipFiles() === 1 ? '' : 's' }}.
             </span>
           </span>
         </div>
         <div v-show="fileList.length + uploadedList.length > 0">
-          <div
-            class="text-center text-xs py-4"
-            v-show="uploading || uploadedList.length > 0"
-          >
+          <div class="text-center text-xs py-4" v-show="uploading || uploadedList.length > 0">
             {{ uploadIsDone ? 'Uploaded' : 'Uploading' }} at
-            <span class="dark:text-green-200 text-green-800 italic font-bold">{{
-                globalSpeed
-              }}</span
+            <span class="dark:text-green-200 text-green-800 italic font-bold">{{ globalSpeed }}</span
             ><span v-show="uploadIsDone">, All done.</span>
           </div>
         </div>
 
-        <div
-          v-show="fileList.length + uploadedList.length > 0"
-          class="pb-4 pt-2"
-        >
+        <div v-show="fileList.length + uploadedList.length > 0" class="pb-4 pt-2">
           <!--          upload status map -->
           <div class="flex flex-wrap dark:bg-neutral-950 bg-neutral-50 pt-2 px-2 pb-1 rounded-xl shadow">
-            <div
-              v-for="item in uploadedList"
-              class="bg-green-400 rounded-xl w-[.5rem] h-[.5rem] mb-1 mr-1"
-            >
-            </div>
+            <div v-for="item in uploadedList" class="bg-green-400 rounded-xl w-[.5rem] h-[.5rem] mb-1 mr-1"></div>
             <div
               v-for="item in fileList"
               class="bg-gray-300 dark:bg-neutral-700 w-[.5rem] h-[.5rem] mb-1 mr-1 relative rounded-xl overflow-hidden"
@@ -98,7 +83,13 @@
           </div>
         </div>
         <div v-show="uploadIsDone" class="text-center">
-          <button class="inline-block border-0 w-auto text-xs outline dark:bg-neutral-800 bg-neutral-100 hover:bg-neutral-300 hover:dark:bg-neutral-700 rounded-3xl" style="border: none;" @click="clearUploadedFiles">Dismiss</button>
+          <button
+            class="inline-block border-0 w-auto text-xs outline dark:bg-neutral-800 bg-neutral-100 hover:bg-neutral-300 hover:dark:bg-neutral-700 rounded-3xl"
+            style="border: none"
+            @click="clearUploadedFiles"
+          >
+            Dismiss
+          </button>
         </div>
         <div class="pb-4" v-show="fileList.length > 0 && !uploading">
           <div class="flex mb-2">
@@ -110,7 +101,7 @@
               v-model="skipFilesWithTheSameName"
             />
             <label for="skip_uploading_if_filename_is_the_same" class="text-xs"
-            >Skip uploading files with the same name</label
+              >Skip uploading files with the same name</label
             >
           </div>
           <div class="flex mb-2">
@@ -121,9 +112,7 @@
               v-model="renameFileWithRandomId"
               id="renameFileWithRandomId"
             />
-            <label class="text-xs" for="renameFileWithRandomId"
-            >Rename each file with a random ID</label
-            >
+            <label class="text-xs" for="renameFileWithRandomId">Rename each file with a random ID</label>
           </div>
           <div class="flex">
             <input
@@ -133,19 +122,29 @@
               v-model="compressImagesBeforeUploading"
               id="compressImagesBeforeUploading"
             />
-            <label class="text-xs" for="compressImagesBeforeUploading">
-              Compress images before uploading
-            </label>
+            <label class="text-xs" for="compressImagesBeforeUploading"> Compress images before uploading </label>
           </div>
           <div v-if="compressImagesBeforeUploading" class="text-xs pt-4 pl-2">
             <div>
-              <label for="removeEXIF" class="flex items-center"><input id="removeEXIF" type="checkbox" v-model="defaultCompressOptions.removeEXIF"> Remove EXIF</label>
+              <label for="removeEXIF" class="flex items-center"
+                ><input id="removeEXIF" type="checkbox" v-model="defaultCompressOptions.removeEXIF" /> Remove
+                EXIF</label
+              >
             </div>
             <div class="flex">
               <label for="covertImageType" class="flex items-center">
-                <input id="covertImageType" type="checkbox" class="shrink-0" v-model="defaultCompressOptions.convertImageType">
+                <input
+                  id="covertImageType"
+                  type="checkbox"
+                  class="shrink-0"
+                  v-model="defaultCompressOptions.convertImageType"
+                />
                 <span class="shrink-0">Covert to</span>
-                <select :disabled="!defaultCompressOptions.convertImageType" class="shrink-0 mb-0 ml-2 text-sm py-1 px-2" v-model="defaultCompressOptions.imageType">
+                <select
+                  :disabled="!defaultCompressOptions.convertImageType"
+                  class="shrink-0 mb-0 ml-2 text-sm py-1 px-2"
+                  v-model="defaultCompressOptions.imageType"
+                >
                   <option value="jpeg">jpg</option>
                   <option value="png">png</option>
                   <option value="webp">webp</option>
@@ -155,35 +154,51 @@
             <div class="flex">
               <label for="maxWidth" class="flex items-center">
                 <span class="shrink-0">Max Width:</span>
-                <input type="number" class="text-xs py-1 px-2 ml-1 mb-0" style="margin-bottom: 0; padding: .25rem .25rem; height: auto" v-model="defaultCompressOptions.maxWidth" id="maxWidth" placeholder="Infinity">
+                <input
+                  type="number"
+                  class="text-xs py-1 px-2 ml-1 mb-0"
+                  style="margin-bottom: 0; padding: 0.25rem 0.25rem; height: auto"
+                  v-model="defaultCompressOptions.maxWidth"
+                  id="maxWidth"
+                  placeholder="Infinity"
+                />
               </label>
             </div>
             <div class="flex">
               <label for="maxHeight" class="flex items-center">
                 <span class="shrink-0">Max Height:</span>
-                <input type="number" class="text-xs py-1 px-2 ml-1 mb-0" style="margin-bottom: 0; padding: .25rem .25rem; height: auto" v-model="defaultCompressOptions.maxHeight" id="maxHeight" placeholder="Infinity">
+                <input
+                  type="number"
+                  class="text-xs py-1 px-2 ml-1 mb-0"
+                  style="margin-bottom: 0; padding: 0.25rem 0.25rem; height: auto"
+                  v-model="defaultCompressOptions.maxHeight"
+                  id="maxHeight"
+                  placeholder="Infinity"
+                />
               </label>
             </div>
             <div class="flex">
               <label for="quality" class="flex items-center">
                 <span class="shrink-0">Image Quality:</span>
-                <input type="number" class="text-xs py-1 px-2 ml-1 mb-0" style="margin-bottom: 0; padding: .25rem .25rem; height: auto" v-model="defaultCompressOptions.quality" id="quality">
+                <input
+                  type="number"
+                  class="text-xs py-1 px-2 ml-1 mb-0"
+                  style="margin-bottom: 0; padding: 0.25rem 0.25rem; height: auto"
+                  v-model="defaultCompressOptions.quality"
+                  id="quality"
+                />
               </label>
             </div>
           </div>
         </div>
 
-        <div class="pt-4 pb-2 text-xs" v-show="fileList.length">
-          Files Queued:
-        </div>
+        <div class="pt-4 pb-2 text-xs" v-show="fileList.length">Files Queued:</div>
         <div
           class="item rounded text-sm flex w-full mb-2 relative items-center"
           v-for="(item, index) in fileList"
           :key="item.key"
         >
-          <div
-            class="w-full bg-neutral-50 text-xs rounded dark:bg-[#333] px-2 py-2 relative shadow"
-          >
+          <div class="w-full bg-neutral-50 text-xs rounded dark:bg-[#333] px-2 py-2 relative shadow">
             <div
               class="progress absolute h-[.1rem] bottom-0 left-0 bg-green-500 transition-all"
               :style="{
@@ -194,11 +209,7 @@
               }"
             ></div>
             <div v-show="editKey === item.key" class="flex">
-              <form
-                action="javascript:"
-                @submit="renameThisFile(item)"
-                class="flex mb-0 w-full"
-              >
+              <form action="javascript:" @submit="renameThisFile(item)" class="flex mb-0 w-full">
                 <input
                   class="text-xs w-full"
                   type="text"
@@ -210,14 +221,16 @@
                   class="ml-2 inline-block w-auto shrink-0 outline text-xs text-emerald-500 mb-0"
                   style="padding: 0; border: none; background: transparent"
                   type="submit"
-                >Rename
+                >
+                  Rename
                 </button>
                 <button
                   type="button"
                   @click="editKey = null"
                   class="inline-block mb-0 w-auto shrink-0 outline ml-2 dark:text-white text-black text-xs"
                   style="padding: 0; border: 0"
-                >Cancel
+                >
+                  Cancel
                 </button>
               </form>
             </div>
@@ -226,17 +239,17 @@
               v-show="editKey !== item.key"
               class="inline-block break-all"
               @click="showRenameInput(item.key)"
-            >{{ renameFileWithRandomId ? item.id_key : item.key }}</span
-            ><br/><span
-            :style="{
+              >{{ renameFileWithRandomId ? item.id_key : item.key }}</span
+            ><br /><span
+              :style="{
                 marginTop: editKey === item.key ? '0' : '0.25rem',
                 top: editKey !== item.key ? 0 : '-.2rem'
               }"
-            class="opacity-80 text-green-500 mt-1 inline-block relative font-mono"
-            :class="{
+              class="opacity-80 text-green-500 mt-1 inline-block relative font-mono"
+              :class="{
                 'text-red-500': statusMap[item.key] === 'error'
               }"
-          >{{ parseByteSize(item.size) }}
+              >{{ parseByteSize(item.size) }}
               <span v-show="uploading && !item.compressing"> / {{ progressMap[item.key] }}%</span>
               <span v-show="item.compressing">Compressing...</span>
               <span v-show="item.splitting && item.isMpu">Splitting Chunks...</span>
@@ -264,10 +277,10 @@
 </template>
 
 <script setup>
-import {onMounted, reactive, ref, watch} from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import axios from 'axios'
-import {useStatusStore} from '../store/status'
-import {nanoid} from 'nanoid'
+import { useStatusStore } from '../store/status'
+import { nanoid } from 'nanoid'
 import Compressor from 'compressorjs'
 
 let statusStore = useStatusStore()
@@ -337,12 +350,11 @@ let compressImage = async function (file) {
   }
 
   return new Promise((resolve, reject) => {
-
     new Compressor(file, {
       quality: 0.8,
       convertSize: Infinity,
       retainExif: !defaultCompressOptions.removeEXIF,
-      mimeType: defaultCompressOptions.convertImageType ? ('image/' + defaultCompressOptions.imageType) : 'auto',
+      mimeType: defaultCompressOptions.convertImageType ? 'image/' + defaultCompressOptions.imageType : 'auto',
       maxWidth: defaultCompressOptions.maxWidth ? defaultCompressOptions.maxWidth : undefined,
       maxHeight: defaultCompressOptions.maxHeight ? defaultCompressOptions.maxHeight : undefined,
       success(result) {
@@ -409,9 +421,7 @@ let updateFileSkipProperty = function () {
 
   fileList.value.forEach((file) => {
     let diff_key = renameFileWithRandomId.value ? 'id_key' : 'key'
-    let match = uploadedFiles.findIndex(
-      (el) => el[diff_key] === formatFileName(file[diff_key])
-    )
+    let match = uploadedFiles.findIndex((el) => el[diff_key] === formatFileName(file[diff_key]))
     file.shouldBeSkipped = match !== -1
   })
 }
@@ -561,14 +571,12 @@ let removeThisFile = function (index, name) {
 
     try {
       if (abortControllerMap.value[name].length) {
-
         fileList.value[index].aborted = true
 
-        abortControllerMap.value[name].forEach(s => {
+        abortControllerMap.value[name].forEach((s) => {
           try {
             s.abort()
-          } catch (_) {
-          }
+          } catch (_) {}
         })
       } else {
         abortControllerMap.value[name].abort()
@@ -641,7 +649,7 @@ function handlePaste() {
 }
 
 async function abortMpu(data) {
-  let {uploadId, key, endPoint, apiKey} = data
+  let { uploadId, key, endPoint, apiKey } = data
 
   let res = await axios({
     method: 'delete',
@@ -653,7 +661,7 @@ async function abortMpu(data) {
 }
 
 async function createMpu(key, data) {
-  const {fileName, endPoint, apiKey} = data
+  const { fileName, endPoint, apiKey } = data
   let res = await axios({
     method: 'post',
     url: endPoint + 'mpu/create/' + key,
@@ -666,12 +674,11 @@ async function createMpu(key, data) {
 }
 
 async function completeMpu(file, data) {
-  const {endPoint, apiKey, uploadId, parts} = data
-  let fileKey = renameFileWithRandomId.value ? file.id_key : file.key;
+  const { endPoint, apiKey, uploadId, parts, fileName } = data
 
   let res = await axios({
     method: 'post',
-    url: endPoint + 'mpu/complete/' + fileKey + '?' + `uploadId=${uploadId}`,
+    url: endPoint + 'mpu/complete/' + fileName + '?' + `uploadId=${uploadId}`,
     headers: {
       'x-api-key': apiKey
     },
@@ -703,13 +710,15 @@ async function remoteSupportMpu(endPoint) {
 async function mpuUploadFile(file, data) {
   console.log(`file size is ${file.size}, switching to mpu`)
 
-  const {fileName, endPoint, apiKey} = data
+  const { fileName, endPoint, apiKey } = data
   file['isMpu'] = true
 
   let remoteSupport = await remoteSupportMpu(endPoint)
 
   if (!remoteSupport) {
-    alert(`R2 workers has refactored its code to support big file uploading, please see the new setup guide at https://r2.jw1.dev/setup-guide`)
+    alert(
+      `R2 workers has refactored its code to support big file uploading, please see the new setup guide at https://r2.jw1.dev/setup-guide`
+    )
     return false
   }
 
@@ -730,15 +739,17 @@ async function mpuUploadFile(file, data) {
 
   let split_i = 0
 
+  async function _splitFileParts(_file, start, end) {
+    const part = _file.slice(start, end)
+    parts.push(part)
+  }
+
+  file['splitting'] = true
   while (parts.length < predictedParts) {
-    file['splitting'] = true
     const start = split_i * partSize
     const end = Math.min(file.size, (split_i + 1) * partSize)
-    const part = file.slice(start, end)
-    parts.push(part)
 
-    // async splitting, so the UI won't freeze
-    await new Promise(r => setTimeout(r, 0))
+    await _splitFileParts(file, start, end)
     split_i++
   }
   file['splitting'] = false
@@ -778,7 +789,7 @@ async function mpuUploadFile(file, data) {
 
     // threads full, wait here
     if (activeThreadCount >= maxThreads) {
-      await new Promise(resolve => setTimeout(resolve, 30))
+      await new Promise((resolve) => setTimeout(resolve, 30))
       i--
       continue
     }
@@ -796,7 +807,7 @@ async function mpuUploadFile(file, data) {
     if (retryLeft === 0) {
       statusMap.value[file.key] = 'error'
 
-      abortControllerMap.value[file.key].forEach(s => {
+      abortControllerMap.value[file.key].forEach((s) => {
         try {
           s.abort()
         } catch (_) {}
@@ -836,7 +847,7 @@ async function mpuUploadFile(file, data) {
         }
       })
     } catch (e) {
-      setTimeout(async function(){
+      setTimeout(async function () {
         await uploadParts(_p, retryLeft - 1)
       }, 500)
       return false
@@ -855,6 +866,7 @@ async function mpuUploadFile(file, data) {
 
     if (completedParts.length === parts.length) {
       await completeMpu(file, {
+        fileName,
         endPoint,
         apiKey,
         uploadId,
