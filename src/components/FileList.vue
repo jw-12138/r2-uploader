@@ -346,7 +346,7 @@ function deleteSelectedFiles() {
 function copySelectedFileUrls() {
   // Access selected files using .value
   const fileUrls = selectedFiles.value.map(file => {
-    const baseUrl = customDomain.value ? customDomain.value : endPoint.value;
+    const baseUrl = customDomain ? customDomain : endPoint;
     return baseUrl + file.key;
   });
 
