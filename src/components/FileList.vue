@@ -28,6 +28,14 @@
         @click="deleteSelectedFiles"
       >Delete Selected
       </button>
+      <button
+        :disabled="selectedFiles.length === 0"
+        class="text-xs inline-block w-auto outline mb-0 ml-2 border-blue-500 text-blue-500"
+        style="padding: 0.3rem 0.5rem"
+        @click="copySelectedFileUrls"
+      >
+        Copy URLs
+      </button>
     </div>
 
     <div>
@@ -335,6 +343,25 @@ function deleteSelectedFiles() {
   })
 }
 
+function  copySelectedFileUrls() {
+    // Build URLs dynamically for each selected file
+    const fileUrls = this.selectedFiles.map(file => {
+      const baseUrl = this.customDomain ? this.customDomain : this.endPoint;
+      return baseUrl + file.key;
+    });
+
+    // Copy to clipboard
+    const urlString = fileUrls.join('\n');
+    navigator.clipboard.writeText(urlString)
+      .then(() => {
+        alert('File URLs copied to clipboard!');
+      })
+      .catch(err => {
+        console.error('Failed to copy URLs: ', err);
+      });
+  }
+  }
+  
 function toggleSelectMode() {
   selectMode.value = !selectMode.value
   selectedFiles.value = []
