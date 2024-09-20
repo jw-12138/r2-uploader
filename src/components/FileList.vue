@@ -343,23 +343,23 @@ function deleteSelectedFiles() {
   })
 }
 
-function  copySelectedFileUrls() {
-    // Build URLs dynamically for each selected file
-    const fileUrls = this.selectedFiles.map(file => {
-      const baseUrl = this.customDomain ? this.customDomain : this.endPoint;
-      return baseUrl + file.key;
-    });
+function copySelectedFileUrls() {
+  // Access selected files using .value
+  const fileUrls = selectedFiles.value.map(file => {
+    const baseUrl = customDomain.value ? customDomain.value : endPoint.value;
+    return baseUrl + file.key;
+  });
 
-    // Copy to clipboard
-    const urlString = fileUrls.join('\n');
-    navigator.clipboard.writeText(urlString)
-      .then(() => {
-        alert('File URLs copied to clipboard!');
-      })
-      .catch(err => {
-        console.error('Failed to copy URLs: ', err);
-      });
-  }
+  // Copy to clipboard
+  const urlString = fileUrls.join('\n');
+  navigator.clipboard.writeText(urlString)
+    .then(() => {
+      alert('File URLs copied to clipboard!');
+    })
+    .catch(err => {
+      console.error('Failed to copy URLs: ', err);
+    });
+}
   
   
 function toggleSelectMode() {
