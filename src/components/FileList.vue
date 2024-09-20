@@ -4,8 +4,9 @@
       <div> File List</div>
     </div>
 
-    <div class="mt-4 mb-4 flex items-center">
+    <div class="mt-4 mb-4 flex items-center flex-wrap space-x-2">
       <button
+        v-show="!selectMode"
         class="text-xs inline-block w-auto outline mb-0"
         style="padding: 0.3rem 0.5rem"
         @click="loadData"
@@ -14,20 +15,31 @@
       >Refresh
       </button>
       <button
-        class="text-xs inline-block w-auto outline mb-0 ml-2"
+        class="text-xs inline-block w-auto outline mb-0"
         style="padding: 0.3rem 0.5rem"
         @click="toggleSelectMode"
         :disabled="fileList.length === 0"
       >
-        {{ selectMode && fileList.length ? 'Cancel' : 'Select' }}
+        {{ selectMode && fileList.length ? 'Quit Selection Mode' : 'Selection Mode' }}
       </button>
-      <button
-        :disabled="selectedFiles.length === 0"
-        class="text-xs inline-block w-auto outline mb-0 ml-2 border-red-500 text-red-500"
-        style="padding: 0.3rem 0.5rem"
-        @click="deleteSelectedFiles"
-      >Delete Selected
-      </button>
+
+      <div v-show="selectMode" class="w-full flex space-x-2 mt-2">
+        <button
+          :disabled="selectedFiles.length === 0"
+          class="text-xs inline-block w-auto outline mb-0 border-red-500 text-red-500"
+          style="padding: 0.3rem 0.5rem"
+          @click="deleteSelectedFiles"
+        >Delete Selected
+        </button>
+        <button
+          :disabled="selectedFiles.length === 0"
+          class="text-xs inline-block w-auto outline mb-0 border-blue-500 text-blue-500 dark:border-blue-400 dark:text-blue-400"
+          style="padding: 0.3rem 0.5rem"
+          @click="copySelectedFileUrls"
+        >
+          {{ copyButtonText }}
+        </button>
+      </div>
     </div>
 
     <div>
@@ -284,10 +296,7 @@ function updateSelectedFiles(file, folder) {
   if (folder !== undefined && !mouseOnSelectionCheckbox.value) {
     let files = dirMap.value[folder]
     let isAllSelected = files.every((item) => item.selected)
-    console.log('isAllSelected', isAllSelected)
-    console.log('document.getElementById(folder)', document.getElementById(folder))
     document.getElementById(folder).checked = isAllSelected
-    console.log('document.getElementById(folder).checked', document.getElementById(folder).checked)
   }
 }
 
@@ -334,6 +343,33 @@ function deleteSelectedFiles() {
     })
   })
 }
+
+const copyButtonText = ref('Copy URLs')
+const copyButtonDisabled = ref(false)
+
+function copySelectedFileUrls() {
+  // Access selected files using .value
+  const fileUrls = selectedFiles.value.map(file => {
+    const baseUrl = customDomain ? customDomain : endPoint
+    return baseUrl + file.key
+  })
+
+  // Copy to clipboard
+  const urlString = fileUrls.join('\n')
+  navigator.clipboard.writeText(urlString)
+    .then(() => {
+      copyButtonText.value = 'Copied!'
+      copyButtonDisabled.value = true
+      setTimeout(() => {
+        copyButtonText.value = 'Copy URLs'
+        copyButtonDisabled.value = false
+      }, 2000)
+    })
+    .catch(err => {
+      console.error('Failed to copy URLs: ', err)
+    })
+}
+
 
 function toggleSelectMode() {
   selectMode.value = !selectMode.value
