@@ -360,7 +360,7 @@ function  copySelectedFileUrls() {
         console.error('Failed to copy URLs: ', err);
       });
   }
-  }
+  
   
 function toggleSelectMode() {
   selectMode.value = !selectMode.value
