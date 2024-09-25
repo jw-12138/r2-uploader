@@ -199,22 +199,20 @@ let pullMyData = async function () {
   animateText(sync_status, 'pulling...hold on')
 
   pullingMyData.value = true
-  let req = await axios(apiEndpoint, {
+  let req = await fetch(apiEndpoint, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
       'Content-Type': 'application/json'
     },
     method: 'GET'
+  }).catch(e => {
+    pullingMyData.value = false
+    animateText(sync_status, 'pull failed')
   })
 
   pullingMyData.value = false
 
-  if (req.status !== 200) {
-    animateText(sync_status, 'pull failed')
-    return false
-  }
-
-  let data = req.data
+  let data = await req.json()
 
   if (!hasEncryptionPassword.value) {
     localStorage.setItem('encryptedEndpointList', data.config)

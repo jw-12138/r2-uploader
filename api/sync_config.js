@@ -1,39 +1,36 @@
 // sync config for users
-// running on vercel serverless function
+export const config = {
+  runtime: 'edge'
+}
 
-import {MongoClient} from 'mongodb'
+import D1 from '../utils/d1.class.js'
+import { _res } from '../utils/response.js'
 
-const url = process.env.MONGO_URL
-const client = new MongoClient(url)
+const d1 = new D1({
+  key: process.env.D1_KEY
+})
 
-console.log('Connecting to MongoDB...')
-await client.connect()
-console.log('Connected to MongoDB')
-
-const db = client.db('r2-sync')
-const collection = db.collection('configs')
-
-export default async function (req, res) {
-  let token = req.headers['authorization']
-  let {config} = req.body
+export default async function (req) {
+  let token = req.headers.get('Authorization')
+  let { config } = await req.json()
 
   if (!token) {
-    return res.status(400).json({
+    return _res.json({
       message: 'no_token'
-    })
+    }, 400)
   }
 
   if (!config) {
     console.log(config)
-    return res.status(400).json({
+    return _res.json({
       message: 'no_config'
-    })
+    }, 400)
   }
 
   let user = await fetch('https://r2.jw1.dev/api/check_github_user', {
     method: 'GET',
     headers: {
-      'Authorization': token
+      Authorization: token
     }
   })
 
@@ -46,26 +43,38 @@ export default async function (req, res) {
 
   let user_json = await user.json()
 
-  let result = await collection.updateOne({
-    user: user_json.login
-  }, {
-    $set: {
-      config_text: config,
-      updated_at: new Date()
-    }
-  })
+  let { error, results } = await d1.query('select * from configs where username = ?', [user_json.login])
 
-  if (result.modifiedCount === 0) {
-    await collection.insertOne({
-      user: user_json.login,
-      config_text: config,
-      updated_at: new Date(),
-      created_at: new Date()
+  if (error) {
+    return _res.json(
+      {
+        error
+      },
+      500
+    )
+  }
+
+  if (results.length === 0) {
+    let {error} = await d1.query('insert into configs (username, config_text, updated_at, created_at) values (?, ?, ?, ?)', [
+      user_json.login,
+      config,
+      Date.now(),
+      Date.now()
+    ])
+
+    if(error){
+      return _res.json({
+        message: 'd1_error',
+        detail: error
+      }, 500)
+    }
+
+    return _res.json({
+      message: 'success'
     })
   }
 
-  return res.json({
-    message: 'success',
-    status: 200
+  return _res.json({
+    message: 'success'
   })
 }
