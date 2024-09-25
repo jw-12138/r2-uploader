@@ -4,7 +4,7 @@ export const config = {
 }
 
 import D1 from '../utils/d1.class.js'
-import { _res } from '../utils/response.js'
+import {_res} from '../utils/response.js'
 
 const d1 = new D1({
   key: process.env.D1_KEY
@@ -56,7 +56,7 @@ export default async function (req, res) {
   let user_json = await user.json()
   console.log('got user')
 
-  let { error, results } = await d1.query('delete from configs where username = ?', [user_json.login])
+  let {error, results} = await d1.query('delete from configs where username = ?', [user_json.login])
 
   console.log(error, results)
 
@@ -70,10 +70,5 @@ export default async function (req, res) {
     )
   }
 
-  return _res.json(
-    {
-      message: 'success'
-    },
-    204
-  )
+  return _res.text('', 204)
 }

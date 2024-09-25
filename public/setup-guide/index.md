@@ -7,7 +7,7 @@ In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing
 - **Upload big files**, R2 dashboard could only upload files which size is smaller than 300Mb, R2 Uploader can handle the upload for a single file up to 100Gb in theory (huge thanks to [@spurin](https://github.com/spurin)).
 - **Image compression**, lots of users would just use R2 as a CDN, so we added this function to make the images load faster.
 - **Easily jump between multiple buckets**, setup multiple workers for different buckets, and switch between them fast.
-- **Sync configs across devices safely**, you can login with GitHub and sync your configs, all data is AES encrypted locally before sending to the server.
+- **Sync configs across devices safely**, you can login with GitHub and sync your configs, all data is AES encrypted locally before sending to our database.
 
 ### Requirements ☝️
 
