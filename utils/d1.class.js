@@ -18,7 +18,8 @@ export default class D1 {
       if(bind){
         _body.bind = bind
       }
-      const res = await fetch('https://d1-workers.jw1dev.workers.dev/r2_jw1dev', {
+
+      const res = await fetch('https://d1.jw1.dev/r2_jw1dev', {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + this.key
@@ -27,7 +28,10 @@ export default class D1 {
       })
 
       const json = await res.json()
-      return json
+
+      return {
+        data: json
+      }
     } catch (e) {
       console.log(e)
       

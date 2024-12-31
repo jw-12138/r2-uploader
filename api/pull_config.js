@@ -35,7 +35,7 @@ export default async function (req, res) {
 
   let user_json = await user.json()
 
-  let {error, results} = await d1.query('select * from configs where username = ?', [user_json.login])
+  let {error, data} = await d1.query('select * from configs where username = ?', [user_json.login])
 
   if (error) {
     return _res.json({
@@ -43,7 +43,13 @@ export default async function (req, res) {
     }, 500)
   }
 
+  if(data.message){
+    return _res.json({
+      message: data.message
+    }, 403)
+  }
+
   return _res.json({
-    config: results[0].config_text
+    config: data.results[0].config_text
   })
 }
