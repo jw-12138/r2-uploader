@@ -634,7 +634,17 @@ const upload = function () {
 
 function handlePaste() {
   window.addEventListener('paste', (e) => {
+    // Check if any input or textarea is focused
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
+    
+    if (isInputFocused) {
+      return; // Do nothing if an input/textarea is focused
+    }
+
     let files = e.clipboardData.files
+    if (files.length === 0) return; // Do nothing if no files were pasted
+    
     renameFileWithRandomId.value = true
     compressImagesBeforeUploading.value = true
     Array.from(files).forEach((file) => {
