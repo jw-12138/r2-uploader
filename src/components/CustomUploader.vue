@@ -190,6 +190,17 @@
               </label>
             </div>
           </div>
+          <div class="flex pt-1 items-center">
+            <input
+              type="checkbox"
+              class="text-xs shrink-0"
+              :disabled="uploading"
+              v-model="uploadToFolder"
+              id="uploadToFolder"
+            />
+            <label class="text-xs whitespace-nowrap" for="uploadToFolder"> Upload to folder </label>
+            <input type="text" class="text-xs px-2 py-1" style="padding: 0.2rem 0.4rem; margin: 0; height: auto" v-model="customFolderName" placeholder="/" @blur="handleFolderNameBlur" />
+          </div>
         </div>
 
         <div class="pt-4 pb-2 text-xs" v-show="fileList.length">Files Queued:</div>
@@ -301,6 +312,8 @@ let realTimeSpeedRecords = ref({})
 let editKey = ref('')
 let renameFileWithRandomId = ref(false)
 let compressImagesBeforeUploading = ref(false)
+let uploadToFolder = ref(false)
+let customFolderName = ref('/')
 
 let clearUploadedFiles = function () {
   uploadedList.value = []
@@ -527,17 +540,41 @@ let handleFilesChange = function (e) {
   abortControllerMap.value = {}
 
   Array.from(e.target.files).forEach((file) => {
-    file.key = file.name
+    // If uploadToFolder is checked and we have a custom folder name, prepend it to the file path
+    if (uploadToFolder.value && customFolderName.value) {
+      let folderPath = customFolderName.value
+      if (!folderPath.startsWith('/')) {
+        folderPath = '/' + folderPath
+      }
+      if (!folderPath.endsWith('/')) {
+        folderPath = folderPath + '/'
+      }
+      file.key = folderPath + file.name
+    } else {
+      file.key = file.name
+    }
 
     // get extension
     let extension = file.name.split('.').pop()
-    file.id_key = nanoid(16) + '.' + extension
+    
+    // If we have a folder path, include it in the id_key as well
+    if (uploadToFolder.value && customFolderName.value) {
+      let folderPath = customFolderName.value
+      if (!folderPath.startsWith('/')) {
+        folderPath = '/' + folderPath
+      }
+      if (!folderPath.endsWith('/')) {
+        folderPath = folderPath + '/'
+      }
+      file.id_key = folderPath + nanoid(16) + '.' + extension
+    } else {
+      file.id_key = nanoid(16) + '.' + extension
+    }
   })
 
   fileList.value = [...fileList.value, ...Array.from(e.target.files)]
 
   // remove duplicate files
-
   let fileNames = fileList.value.map((item) => item.key)
   fileList.value = fileList.value.filter((item, index) => {
     return fileNames.indexOf(item.key) === index
@@ -1016,5 +1053,83 @@ watch(
   }
 )
 
+// Add watch handler for uploadToFolder
+watch(uploadToFolder, (newVal) => {
+  if (!newVal) {
+    // When unchecked, remove folder path from all files
+    fileList.value = fileList.value.map(file => {
+      // Get just the filename without any path
+      let fileName = file.key.split('/').pop()
+      let idFileName = file.id_key.split('/').pop()
+      
+      file.key = fileName
+      file.id_key = idFileName
+      
+      return file
+    })
+  } else if (customFolderName.value && customFolderName.value !== '/') {
+    // When checked and there's a custom folder name, apply it
+    let folderPath = customFolderName.value
+    if (!folderPath.startsWith('/')) {
+      folderPath = '/' + folderPath
+    }
+    if (!folderPath.endsWith('/')) {
+      folderPath = folderPath + '/'
+    }
+    customFolderName.value = folderPath
+
+    fileList.value = fileList.value.map(file => {
+      // Get just the filename without any path
+      let fileName = file.key.split('/').pop()
+      let idFileName = file.id_key.split('/').pop()
+      
+      // Update both key and id_key with new folder path
+      file.key = folderPath + fileName
+      file.id_key = folderPath + idFileName
+      
+      return file
+    })
+  }
+
+  // Update skip properties if needed
+  if (skipFilesWithTheSameName.value) {
+    updateFileSkipProperty()
+  }
+})
+
 handlePaste()
+
+let handleFolderNameBlur = function () {
+  if (!uploadToFolder.value || !customFolderName.value || fileList.value.length === 0) {
+    return
+  }
+
+  // Normalize folder path to ensure it starts and ends with /
+  let folderPath = customFolderName.value
+  if (!folderPath.startsWith('/')) {
+    folderPath = '/' + folderPath
+  }
+  if (!folderPath.endsWith('/')) {
+    folderPath = folderPath + '/'
+  }
+  customFolderName.value = folderPath
+
+  // Update all files in the queue with the new folder path
+  fileList.value = fileList.value.map(file => {
+    // Get just the filename without any path
+    let fileName = file.key.split('/').pop()
+    let idFileName = file.id_key.split('/').pop()
+    
+    // Update both key and id_key with new folder path
+    file.key = folderPath + fileName
+    file.id_key = folderPath + idFileName
+    
+    return file
+  })
+
+  // Update skip properties if needed
+  if (skipFilesWithTheSameName.value) {
+    updateFileSkipProperty()
+  }
+}
 </script>
