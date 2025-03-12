@@ -1,7 +1,7 @@
 <template>
   <form action="javascript:">
     <div class="font-bold italic">
-      <div> File List</div>
+      <div>File List</div>
     </div>
 
     <div class="mt-4 mb-4 flex items-center flex-wrap space-x-2">
@@ -12,13 +12,14 @@
         @click="loadData"
         :aria-busy="loading"
         :disabled="loading || !endPoint"
-      >Refresh
+      >
+        Refresh
       </button>
       <button
         class="text-xs inline-block w-auto outline mb-0"
         style="padding: 0.3rem 0.5rem"
         @click="toggleSelectMode"
-        :disabled="fileList.length === 0"
+        :disabled="fileList.length === 0 || loading"
       >
         {{ selectMode && fileList.length ? 'Quit Selection Mode' : 'Selection Mode' }}
       </button>
@@ -29,7 +30,8 @@
           class="text-xs inline-block w-auto outline mb-0 border-red-500 text-red-500"
           style="padding: 0.3rem 0.5rem"
           @click="deleteSelectedFiles"
-        >Delete Selected
+        >
+          Delete Selected
         </button>
         <button
           :disabled="selectedFiles.length === 0"
@@ -43,23 +45,29 @@
     </div>
 
     <div>
-      <div
-        class="text-xs"
-        v-show="!loading && fileList.length === 0 && !loadDataErrorText"
-      >
+      <div class="text-xs" v-show="!loading && fileList.length === 0 && !loadDataErrorText">
         Seems like we got nothing here.
       </div>
       <div class="text-red-500 text-xs" v-show="loadDataErrorText">
         {{ loadDataErrorText }}
 
-        <pre
-          class="mt-2"
-        ><code class="text-xs">{{ loadDataErrorStack }}</code></pre>
+        <pre class="mt-2"><code class="text-xs">{{ loadDataErrorStack }}</code></pre>
       </div>
       <div class="text-xs mb-4" v-show="fileList.length > 0">
-        <span class="font-bold">{{ globalCursor ? 'More than' : '' }}</span> {{ fileList.length }} file{{ fileList.length === 1 ? '' : 's' }},
-        {{ parseByteSize(allFileSize) }} total.
-        <button class="inline outline px-2 py-1 text-xs w-auto mb-0" v-show="globalCursor" @click="loadData('more')" :aria-busy="loading">Load more</button>
+        <span class="font-bold">{{ globalCursor ? 'More than' : '' }}</span> {{ fileList.length }} file{{
+          fileList.length === 1 ? '' : 's'
+        }}, {{ parseByteSize(allFileSize) }} total.
+        <div class="inline-flex space-x-2">
+          <button
+            class="inline outline px-2 py-1 text-xs w-auto mb-0"
+            v-show="globalCursor"
+            @click="loadData('more')"
+            :aria-busy="loading"
+            :disabled="loading"
+          >
+            Load next page
+          </button>
+        </div>
       </div>
 
       <div class="text-xs mb-2" v-show="fileList.length > 0">
@@ -75,7 +83,14 @@
 
       <div class="pb-4" v-show="fileList.length > 0">
         <label for="seeFolderStructure" class="text-xs" :aria-busy="reconstructing">
-          <input type="checkbox" id="seeFolderStructure" v-model="seeFolderStructure" class="mr-2" :disabled="reconstructing"> Folder Structure
+          <input
+            type="checkbox"
+            id="seeFolderStructure"
+            v-model="seeFolderStructure"
+            class="mr-2"
+            :disabled="reconstructing"
+          />
+          Folder Structure
         </label>
       </div>
 
@@ -83,7 +98,7 @@
         <div
           class="rounded-lg mb-2"
           :class="seeFolderStructure ? 'bg-neutral-50 dark:bg-[#333] p-2 shadow' : ''"
-          v-for="folder in Object.keys(dirMap).map(el => {
+          v-for="folder in Object.keys(dirMap).map((el) => {
             return {
               name: el,
               timestamp: Date.now()
@@ -96,19 +111,28 @@
               {{ folder.name }}
             </summary>
 
-            <div class="mb-2 text-xs" v-show="selectMode" @mouseenter="mouseOnSelectionCheckbox = true" @mouseleave="mouseOnSelectionCheckbox = false">
-              <label :for="folder.name"><input
-                name="select_all_for_folder"
-                class="mr-2"
-                type="checkbox"
-                :id="folder.name"
-                @change="handleFolderSelect(folder.name)"
-              /> Select All</label>
+            <div
+              class="mb-2 text-xs"
+              v-show="selectMode"
+              @mouseenter="mouseOnSelectionCheckbox = true"
+              @mouseleave="mouseOnSelectionCheckbox = false"
+            >
+              <label :for="folder.name"
+                ><input
+                  name="select_all_for_folder"
+                  class="mr-2"
+                  type="checkbox"
+                  :id="folder.name"
+                  @change="handleFolderSelect(folder.name)"
+                />
+                Select All</label
+              >
             </div>
             <div
               class="item mb-2 rounded text-sm py-1 flex items-center justify-between"
               :class="seeFolderStructure ? 'pl-4' : ''"
               v-for="item in dirMap[folder.name]"
+              :key="item.key"
             >
               <div class="w-[2rem]" v-show="selectMode">
                 <input
@@ -122,38 +146,42 @@
                 class="name whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
                 style="width: calc(100% - 7rem)"
                 :style="{
-                width: selectMode ? 'calc(100% - 2rem)' : 'calc(100% - 5rem)'
-              }"
+                  width: selectMode ? 'calc(100% - 2rem)' : 'calc(100% - 5rem)'
+                }"
               >
-                <div
-                  class="w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                >
-                  <a
-                    :href="(customDomain ? customDomain : endPoint) + item.key"
-                    target="_blank"
-                    v-show="!selectMode"
-                  >{{ item.fileName }}</a
-                  >
-                  <label v-show="selectMode" :for="item.key" class="mb-0">{{
-                      item.fileName
-                    }}</label>
+                <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                  <a :href="(customDomain ? customDomain : endPoint) + item.key" target="_blank" v-show="!selectMode">{{
+                    item.fileName
+                  }}</a>
+                  <label v-show="selectMode" :for="item.key" class="mb-0">{{ item.fileName }}</label>
                 </div>
               </div>
-              <div
-                class="actions w-[5rem] shrink-0 text-right"
-                v-show="!selectMode"
-              >
+              <div class="actions w-[5rem] shrink-0 text-right" v-show="!selectMode">
                 <button
                   style="border: none; padding: 0.2rem 0.3rem"
                   class="w-auto inline-block outline text-xs text-red-500 mb-0"
                   @click="deleteThisFile(item.key)"
                   :aria-busy="deletingKey === item.key"
                   :disabled="deletingKey === item.key"
-                >Delete
+                >
+                  Delete
                 </button>
               </div>
             </div>
           </details>
+        </div>
+        <div>
+          <div class="inline-flex space-x-2">
+            <button
+              class="inline outline px-2 py-1 text-xs w-auto mb-0"
+              v-show="globalCursor"
+              @click="loadData('more')"
+              :aria-busy="loading"
+              :disabled="loading"
+            >
+              Load next page
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -161,11 +189,11 @@
 </template>
 
 <script setup>
-import {onMounted, ref, watch} from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import axios from 'axios'
-import {useStatusStore} from '../store/status'
-import {storeToRefs} from 'pinia'
-import {nanoid} from 'nanoid'
+import { useStatusStore } from '../store/status'
+import { storeToRefs } from 'pinia'
+import { nanoid } from 'nanoid'
 
 let sort = ref('0')
 
@@ -203,7 +231,7 @@ function getSortVariables(val) {
     sortType = 'asc'
   }
 
-  return {sortKey, sortType}
+  return { sortKey, sortType }
 }
 
 let sortFileList = function (sortKey, sortType) {
@@ -224,7 +252,7 @@ let sortFileList = function (sortKey, sortType) {
 }
 
 let statusStore = useStatusStore()
-let {uploading, endPointUpdated} = storeToRefs(statusStore)
+let { uploading, endPointUpdated } = storeToRefs(statusStore)
 
 let selectMode = ref(false)
 
@@ -288,9 +316,7 @@ function updateSelectedFiles(file, folder) {
   if (file.selected) {
     selectedFiles.value.push(file)
   } else {
-    selectedFiles.value = selectedFiles.value.filter(
-      (item) => item.key !== file.key
-    )
+    selectedFiles.value = selectedFiles.value.filter((item) => item.key !== file.key)
   }
 
   if (folder !== undefined && !mouseOnSelectionCheckbox.value) {
@@ -325,9 +351,7 @@ function deleteSelectedFiles() {
   selectedFiles.value.forEach((file) => {
     deleteThisFile(file.key, true, {
       callback: () => {
-        selectedFiles.value = selectedFiles.value.filter(
-          (item) => item.key !== file.key
-        )
+        selectedFiles.value = selectedFiles.value.filter((item) => item.key !== file.key)
 
         if (selectedFiles.value.length === 0) {
           setTimeout(() => {
@@ -349,14 +373,15 @@ const copyButtonDisabled = ref(false)
 
 function copySelectedFileUrls() {
   // Access selected files using .value
-  const fileUrls = selectedFiles.value.map(file => {
+  const fileUrls = selectedFiles.value.map((file) => {
     const baseUrl = customDomain ? customDomain : endPoint
     return baseUrl + file.key
   })
 
   // Copy to clipboard
   const urlString = fileUrls.join('\n')
-  navigator.clipboard.writeText(urlString)
+  navigator.clipboard
+    .writeText(urlString)
     .then(() => {
       copyButtonText.value = 'Copied!'
       copyButtonDisabled.value = true
@@ -365,11 +390,10 @@ function copySelectedFileUrls() {
         copyButtonDisabled.value = false
       }, 2000)
     })
-    .catch(err => {
+    .catch((err) => {
       console.error('Failed to copy URLs: ', err)
     })
 }
-
 
 function toggleSelectMode() {
   selectMode.value = !selectMode.value
@@ -383,7 +407,7 @@ function toggleSelectMode() {
 function clearSelection() {
   selectedFiles.value = []
 
-  document.querySelectorAll('input[type="checkbox"][name="select_all_for_folder"]').forEach(el => {
+  document.querySelectorAll('input[type="checkbox"][name="select_all_for_folder"]').forEach((el) => {
     el.checked = false
   })
 
@@ -418,9 +442,7 @@ async function parseDirs(file) {
     if (dirMap.value[dirKey]) {
       dirMap.value[dirKey].push(item)
     } else {
-      dirMap.value[dirKey] = [
-        item
-      ]
+      dirMap.value[dirKey] = [item]
     }
   } else {
     let item = {
@@ -430,9 +452,7 @@ async function parseDirs(file) {
     if (dirMap.value['/']) {
       dirMap.value['/'].push(item)
     } else {
-      dirMap.value['/'] = [
-        item
-      ]
+      dirMap.value['/'] = [item]
     }
   }
 }
@@ -443,14 +463,16 @@ async function mapFilesToDir() {
 
   let start = Date.now()
 
-  let {sortKey, sortType} = getSortVariables(sort.value)
+  let { sortKey, sortType } = getSortVariables(sort.value)
   let temp = sortFileList(sortKey, sortType)
 
   fileList.value = temp
 
-  await Promise.all(fileList.value.map(async (item) => {
-    await parseDirs(item)
-  }))
+  await Promise.all(
+    fileList.value.map(async (item) => {
+      await parseDirs(item)
+    })
+  )
 
   let end = Date.now()
 
@@ -521,53 +543,51 @@ let loadDataErrorStack = ref('')
 
 let globalCursor = ref('')
 
-let loadData = async function (action) {
-  loading.value = true
-  loadDataErrorText.value = ''
-  loadDataErrorStack.value = ''
+async function loadData(action) {
+  try {
+    loading.value = true
+    loadDataErrorText.value = ''
+    loadDataErrorStack.value = ''
 
-  if (!endPoint || !apiKey) {
-    loading.value = false
-    return false
-  }
-
-  axios({
-    method: 'patch',
-    headers: {
-      'x-api-key': apiKey
-    },
-    url: endPoint + (action === 'more' && globalCursor.value ? '?cursor=' + globalCursor.value : '')
-  })
-    .then(async (res) => {
+    if (!endPoint || !apiKey) {
       loading.value = false
-
-      if (globalCursor.value && action === 'more') {
-        fileList.value.push(...res.data.objects)
-      } else {
-        fileList.value = res.data.objects
-      }
-
-      if (res.data.truncated && res.data.cursor) {
-        globalCursor.value = res.data.cursor
-      } else {
-        globalCursor.value = ''
-      }
-
-      restoreSortSelection()
-
-      await mapFilesToDir()
-    })
-    .catch((e) => {
-      loading.value = false
-      let errorJson = e.toJSON()
-      console.log(errorJson)
-      loadDataErrorText.value = `[${errorJson.message}], please check your endpoint and API key.`
-      loadDataErrorStack.value = errorJson.stack
       return false
+    }
+
+    const res = await axios({
+      method: 'patch',
+      headers: {
+        'x-api-key': apiKey
+      },
+      url: endPoint + (action === 'more' && globalCursor.value ? '?cursor=' + globalCursor.value : '')
     })
-    .finally(() => {
-      clearSelection()
-    })
+
+    if (globalCursor.value && action === 'more') {
+      fileList.value.push(...res.data.objects)
+    } else {
+      fileList.value = res.data.objects
+    }
+
+    if (res.data.truncated && res.data.cursor) {
+      globalCursor.value = res.data.cursor
+    } else {
+      globalCursor.value = ''
+    }
+
+    await restoreSortSelection()
+    await mapFilesToDir()
+
+    return true
+  } catch (e) {
+    let errorJson = e.toJSON()
+    console.log(errorJson)
+    loadDataErrorText.value = `[${errorJson.message}], please check your endpoint and API key.`
+    loadDataErrorStack.value = errorJson.stack
+    return false
+  } finally {
+    loading.value = false
+    clearSelection()
+  }
 }
 
 loadData()
