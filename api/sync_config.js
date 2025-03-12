@@ -43,35 +43,25 @@ export default async function (req) {
 
   let user_json = await user.json()
 
-  let { error, results } = await d1.query('select * from configs where username = ?', [user_json.login])
-
-  if (error) {
-    return _res.json(
-      {
-        error
-      },
-      500
-    )
-  }
-
-  if (results.length === 0) {
-    let {error} = await d1.query('insert into configs (username, config_text, updated_at, created_at) values (?, ?, ?, ?)', [
+  // Use upsert operation to either insert a new record or update an existing one
+  let { error } = await d1.query(
+    'INSERT INTO configs (username, config_text, updated_at, created_at) VALUES (?, ?, ?, ?) ' +
+    'ON CONFLICT(username) DO UPDATE SET config_text = ?, updated_at = ?',
+    [
       user_json.login,
       config,
       Date.now(),
+      Date.now(),
+      config,
       Date.now()
-    ])
+    ]
+  )
 
-    if(error){
-      return _res.json({
-        message: 'd1_error',
-        detail: error
-      }, 500)
-    }
-
+  if (error) {
     return _res.json({
-      message: 'success'
-    })
+      message: 'd1_error',
+      detail: error
+    }, 500)
   }
 
   return _res.json({
