@@ -29,9 +29,7 @@ export default class D1 {
 
       const json = await res.json()
 
-      return {
-        data: json
-      }
+      return json
     } catch (e) {
       console.log(e)
       

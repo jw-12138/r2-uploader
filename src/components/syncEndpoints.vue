@@ -199,62 +199,83 @@ let pullMyData = async function () {
   animateText(sync_status, 'pulling...hold on')
 
   pullingMyData.value = true
-  let req = await fetch(apiEndpoint, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-      'Content-Type': 'application/json'
-    },
-    method: 'GET'
-  }).catch(e => {
-    pullingMyData.value = false
-    animateText(sync_status, 'pull failed')
-  })
-
-  pullingMyData.value = false
-
-  let data = await req.json()
-
-  if (!hasEncryptionPassword.value) {
-    localStorage.setItem('encryptedEndpointList', data.config)
-
-    animateText(sync_status, 'pulled, insert your password to decrypt the data')
-
-    return false
-  }
-
-  let decryptedData = decryptData(data.config)
-
-  if (decryptedData === '') {
-    animateText(sync_status, 'pulled, but found nothing')
-    return false
-  }
-
-  let currentEndpointList = localStorage.getItem('endPointList')
-  let currentEndpointListJson = JSON.parse(currentEndpointList)
-
-  let remoteEndpointListJson
-
   try {
-    remoteEndpointListJson = JSON.parse(decryptedData)
+    let req = await fetch(apiEndpoint, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        'Content-Type': 'application/json'
+      },
+      method: 'GET'
+    })
+
+    if (!req.ok) {
+      pullingMyData.value = false
+      if (req.status === 404) {
+        animateText(sync_status, 'no data found on server')
+        return false
+      } else if (req.status === 500) {
+        animateText(sync_status, 'server error, please try again later')
+        return false
+      } else {
+        animateText(sync_status, `pull failed with status: ${req.status}`)
+        return false
+      }
+    }
+
+    let data = await req.json()
+
+    pullingMyData.value = false
+
+    console.log(data)
+
+    if (!hasEncryptionPassword.value) {
+      localStorage.setItem('encryptedEndpointList', data.config)
+
+      animateText(sync_status, 'pulled, insert your password to decrypt the data')
+
+      return false
+    }
+
+    let decryptedData = decryptData(data.config)
+
+    console.log('decryptedData', decryptedData)
+
+    if (decryptedData === '') {
+      animateText(sync_status, 'pulled, but found nothing')
+      return false
+    }
+
+    let currentEndpointList = localStorage.getItem('endPointList')
+    let currentEndpointListJson = JSON.parse(currentEndpointList)
+
+    let remoteEndpointListJson
+
+    try {
+      remoteEndpointListJson = JSON.parse(decryptedData)
+    } catch (e) {
+      animateText(sync_status, 'pulled, but the data seems to be corrupted, check your password please')
+      return false
+    }
+
+    if (currentEndpointListJson === null) {
+      currentEndpointListJson = []
+    }
+    let mergedEndpointList = [...currentEndpointListJson, ...remoteEndpointListJson]
+
+    mergedEndpointList = mergedEndpointList.filter((item, index, self) => {
+      return self.findIndex(t => t.endPoint === item.endPoint) === index
+    })
+
+    localStorage.setItem('endPointList', JSON.stringify(mergedEndpointList))
+
+    animateText(sync_status, 'pulled')
+
+    statusStore.endPointPulled += 1
   } catch (e) {
-    animateText(sync_status, 'pulled, but the data seems to be corrupted, check your password please')
-    return false
+    pullingMyData.value = false
+    animateText(sync_status, 'pull failed: network error')
+    console.error(e)
   }
-
-  if (currentEndpointListJson === null) {
-    currentEndpointListJson = []
-  }
-  let mergedEndpointList = [...currentEndpointListJson, ...remoteEndpointListJson]
-
-  mergedEndpointList = mergedEndpointList.filter((item, index, self) => {
-    return self.findIndex(t => t.endPoint === item.endPoint) === index
-  })
-
-  localStorage.setItem('endPointList', JSON.stringify(mergedEndpointList))
-
-  animateText(sync_status, 'pulled')
-
-  statusStore.endPointPulled += 1
 }
 
 let deletingMyData = ref(false)

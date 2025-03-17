@@ -43,28 +43,39 @@ export default async function (req) {
 
   let user_json = await user.json()
 
-  // Use upsert operation to either insert a new record or update an existing one
-  let { error } = await d1.query(
-    'INSERT INTO configs (username, config_text, updated_at, created_at) VALUES (?, ?, ?, ?) ' +
-    'ON CONFLICT(username) DO UPDATE SET config_text = ?, updated_at = ?',
-    [
-      user_json.login,
-      config,
-      Date.now(),
-      Date.now(),
-      config,
-      Date.now()
-    ]
-  )
+  try {
+    // First check if the user exists
+    const userExists = await d1.query(
+      'SELECT username FROM configs WHERE username = ?',
+      [user_json.login]
+    )
+    
+    let res;
+    if (userExists.results && userExists.results.length > 0) {
+      // Update existing user
+      res = await d1.query(
+        'UPDATE configs SET config_text = ?, updated_at = ? WHERE username = ?',
+        [config, Date.now(), user_json.login]
+      )
+    } else {
+      // Insert new user
+      res = await d1.query(
+        'INSERT INTO configs (username, config_text, updated_at, created_at) VALUES (?, ?, ?, ?)',
+        [user_json.login, config, Date.now(), Date.now()]
+      )
+    }
 
-  if (error) {
+    if(res.message && res.message.startsWith('D1_ERROR:')){
+      throw new Error(res.message)
+    }
+
+    console.log('d1 res:', res)
+    return _res.json(res)
+  } catch (error) {
+    console.log('error', error)
     return _res.json({
       message: 'd1_error',
-      detail: error
+      detail: error.message
     }, 500)
-  }
-
-  return _res.json({
-    message: 'success'
-  })
+  }  
 }

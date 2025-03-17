@@ -16,6 +16,7 @@
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.7",
     "bun-types": "^1.1.29",
+    "caniuse-lite": "^1.0.30001705",
     "compressorjs": "^1.2.1",
     "crypto-js": "^4.2.0",
     "marked": "^9.1.6",

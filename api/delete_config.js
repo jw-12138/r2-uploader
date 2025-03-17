@@ -56,19 +56,21 @@ export default async function (req, res) {
   let user_json = await user.json()
   console.log('got user')
 
-  let {error, results} = await d1.query('delete from configs where username = ?', [user_json.login])
+  let delete_res = await d1.query('delete from configs where username = ?', [user_json.login])
 
-  console.log(error, results)
+  console.log(delete_res)
 
-  if (error) {
+  if (!delete_res.success) {
     return _res.json(
       {
         message: 'd1_error',
-        detail: error
+        detail: delete_res.error
       },
       500
     )
   }
 
-  return _res.text('', 204)
+  return new Response('', {
+    status: 200
+  })
 }
