@@ -313,7 +313,7 @@ let editKey = ref('')
 let renameFileWithRandomId = ref(false)
 let compressImagesBeforeUploading = ref(false)
 let uploadToFolder = ref(false)
-let customFolderName = ref('/')
+let customFolderName = ref('')
 
 let clearUploadedFiles = function () {
   uploadedList.value = []
@@ -1095,20 +1095,23 @@ let handleFolderNameBlur = function () {
     return
   }
 
-  // Normalize folder path to ensure it starts and ends with /
-  let folderPath = customFolderName.value
-  if (!folderPath.endsWith('/')) {
+  if (customFolderName.value === '/') {
+    customFolderName.value = ''
+    return
+  }
+
+  let folderPath = customFolderName.value.replace(/^\/+/, '')
+  
+  // Normalize folder path to ensure it ends with /
+  if (folderPath && !folderPath.endsWith('/')) {
     folderPath = folderPath + '/'
   }
   customFolderName.value = folderPath
 
-  // Update all files in the queue with the new folder path
   fileList.value = fileList.value.map(file => {
-    // Get just the filename without any path
     let fileName = file.key.split('/').pop()
     let idFileName = file.id_key.split('/').pop()
 
-    // Update both key and id_key with new folder path
     file.key = folderPath + fileName
     file.id_key = folderPath + idFileName
 
