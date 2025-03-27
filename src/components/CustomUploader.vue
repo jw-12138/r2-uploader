@@ -543,9 +543,6 @@ let handleFilesChange = function (e) {
     // If uploadToFolder is checked and we have a custom folder name, prepend it to the file path
     if (uploadToFolder.value && customFolderName.value) {
       let folderPath = customFolderName.value
-      if (!folderPath.startsWith('/')) {
-        folderPath = '/' + folderPath
-      }
       if (!folderPath.endsWith('/')) {
         folderPath = folderPath + '/'
       }
@@ -556,13 +553,10 @@ let handleFilesChange = function (e) {
 
     // get extension
     let extension = file.name.split('.').pop()
-    
+
     // If we have a folder path, include it in the id_key as well
     if (uploadToFolder.value && customFolderName.value) {
       let folderPath = customFolderName.value
-      if (!folderPath.startsWith('/')) {
-        folderPath = '/' + folderPath
-      }
       if (!folderPath.endsWith('/')) {
         folderPath = folderPath + '/'
       }
@@ -674,14 +668,14 @@ function handlePaste() {
     // Check if any input or textarea is focused
     const activeElement = document.activeElement;
     const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
-    
+
     if (isInputFocused) {
       return; // Do nothing if an input/textarea is focused
     }
 
     let files = e.clipboardData.files
     if (files.length === 0) return; // Do nothing if no files were pasted
-    
+
     renameFileWithRandomId.value = true
     compressImagesBeforeUploading.value = true
     Array.from(files).forEach((file) => {
@@ -1061,18 +1055,15 @@ watch(uploadToFolder, (newVal) => {
       // Get just the filename without any path
       let fileName = file.key.split('/').pop()
       let idFileName = file.id_key.split('/').pop()
-      
+
       file.key = fileName
       file.id_key = idFileName
-      
+
       return file
     })
   } else if (customFolderName.value && customFolderName.value !== '/') {
     // When checked and there's a custom folder name, apply it
     let folderPath = customFolderName.value
-    if (!folderPath.startsWith('/')) {
-      folderPath = '/' + folderPath
-    }
     if (!folderPath.endsWith('/')) {
       folderPath = folderPath + '/'
     }
@@ -1082,11 +1073,11 @@ watch(uploadToFolder, (newVal) => {
       // Get just the filename without any path
       let fileName = file.key.split('/').pop()
       let idFileName = file.id_key.split('/').pop()
-      
+
       // Update both key and id_key with new folder path
       file.key = folderPath + fileName
       file.id_key = folderPath + idFileName
-      
+
       return file
     })
   }
@@ -1106,9 +1097,6 @@ let handleFolderNameBlur = function () {
 
   // Normalize folder path to ensure it starts and ends with /
   let folderPath = customFolderName.value
-  if (!folderPath.startsWith('/')) {
-    folderPath = '/' + folderPath
-  }
   if (!folderPath.endsWith('/')) {
     folderPath = folderPath + '/'
   }
@@ -1119,11 +1107,11 @@ let handleFolderNameBlur = function () {
     // Get just the filename without any path
     let fileName = file.key.split('/').pop()
     let idFileName = file.id_key.split('/').pop()
-    
+
     // Update both key and id_key with new folder path
     file.key = folderPath + fileName
     file.id_key = folderPath + idFileName
-    
+
     return file
   })
 
