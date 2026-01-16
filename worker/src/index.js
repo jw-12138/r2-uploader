@@ -39,14 +39,39 @@ function jsonResponse(data, status = 200) {
 }
 
 /**
- * Validate API key
+ * Constant-time string comparison to prevent timing attacks.
+ * Uses XOR comparison to ensure all characters are checked regardless of match.
+ */
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') {
+    return false;
+  }
+
+  // Length check - for best security, API keys should have a fixed length
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return result === 0;
+}
+
+/**
+ * Validate API key using constant-time comparison
  */
 function validateApiKey(request, env) {
   const apiKey = request.headers.get('x-api-key');
-  if (!apiKey || apiKey !== env.AUTH_KEY_SECRET) {
+  const secret = env.AUTH_KEY_SECRET;
+  
+  if (!apiKey || !secret) {
     return false;
   }
-  return true;
+  
+  return timingSafeEqual(apiKey, secret);
 }
 
 /**
