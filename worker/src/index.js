@@ -11,7 +11,7 @@
  */
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://your-frontend.pages.dev',
   'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, PATCH, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, x-api-key, Authorization',
   'Access-Control-Max-Age': '86400',
@@ -245,8 +245,8 @@ export default {
       // Not found
       return jsonResponse({ error: 'Not found' }, 404);
     } catch (err) {
-      console.error('Worker error:', err);
-      return jsonResponse({ error: err.message || 'Internal error' }, 500);
+      console.error('Worker error:', err.stack || err);
+      return jsonResponse({ error: 'Internal Server Error' }, 500);
     }
   },
 };
