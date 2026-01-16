@@ -39,39 +39,29 @@ function jsonResponse(data, status = 200) {
 }
 
 /**
- * Constant-time string comparison to prevent timing attacks.
- * Uses XOR comparison to ensure all characters are checked regardless of match.
+ * Validate API key using the built-in, constant-time comparison from the Web Crypto API
+ * to prevent timing attacks.
  */
-function timingSafeEqual(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string') {
-    return false;
-  }
-
-  // Length check - for best security, API keys should have a fixed length
-  if (a.length !== b.length) {
-    return false;
-  }
-
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-
-  return result === 0;
-}
-
-/**
- * Validate API key using constant-time comparison
- */
-function validateApiKey(request, env) {
+async function validateApiKey(request, env) {
   const apiKey = request.headers.get('x-api-key');
   const secret = env.AUTH_KEY_SECRET;
-  
+
   if (!apiKey || !secret) {
     return false;
   }
-  
-  return timingSafeEqual(apiKey, secret);
+
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(apiKey);
+  const secretData = encoder.encode(secret);
+
+  if (keyData.byteLength !== secretData.byteLength) {
+    // Perform a dummy comparison on the secret to mitigate timing attacks.
+    // This ensures the function takes a similar amount of time regardless of the provided key's length.
+    await crypto.subtle.timingSafeEqual(secretData, secretData);
+    return false;
+  }
+
+  return await crypto.subtle.timingSafeEqual(keyData, secretData);
 }
 
 /**
@@ -100,8 +90,8 @@ export default {
       return corsResponse(null, { status: 204 });
     }
 
-    // Auth check
-    if (requiresAuth(request, env) && !validateApiKey(request, env)) {
+    // Auth check (validateApiKey is async for timing-safe comparison)
+    if (requiresAuth(request, env) && !(await validateApiKey(request, env))) {
       return jsonResponse({ error: 'Unauthorized' }, 401);
     }
 
