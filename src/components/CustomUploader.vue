@@ -1,7 +1,7 @@
 <template>
   <div>
     <form action="javascript:">
-      <div class="font-bold italic">Upload Files</div>
+      <div class="font-bold italic">{{ t('upload.title') }}</div>
       <div>
         <label
           for="fileInput"
@@ -19,7 +19,7 @@
             opacity: uploading ? 0.5 : 1
           }"
           @click="handleFolder"
-          >Choose Folder 📂</label
+          >{{ t('upload.chooseFolder') }} 📂</label
         >
 
         <input
@@ -37,25 +37,25 @@
           @click="upload"
           :disabled="uploading"
         >
-          🔥 Upload
+          🔥 {{ t('upload.button').replace('🔥 ', '') }}
         </button>
       </div>
       <div>
         <div class="text-xs opacity-50 mb-2">
-          {{ fileList.length }} File{{ fileList.length === 1 ? '' : 's' }}, {{ parseByteSize(allFileSize) }} total.
+          {{ fileList.length }} {{ t('upload.files') }}, {{ parseByteSize(allFileSize) }} {{ t('upload.total') }}.
           <span v-show="skipFilesWithTheSameName && !uploading">
-            Will skip
-            <span v-show="calcSkipFiles() === fileList.length && !uploading">all. </span>
+            {{ t('upload.willSkip') }}
+            <span v-show="calcSkipFiles() === fileList.length && !uploading">{{ t('upload.all') }}. </span>
             <span v-show="calcSkipFiles() !== fileList.length"
-              >{{ calcSkipFiles() }} file{{ calcSkipFiles() === 1 ? '' : 's' }}.
+              >{{ calcSkipFiles() }} {{ t('upload.file') }}.
             </span>
           </span>
         </div>
         <div v-show="fileList.length + uploadedList.length > 0">
           <div class="text-center text-xs py-4" v-show="uploading || uploadedList.length > 0">
-            {{ uploadIsDone ? 'Uploaded' : 'Uploading' }} at
+            {{ uploadIsDone ? t('upload.uploadedAt') : t('upload.uploadingAt') }}
             <span class="dark:text-green-200 text-green-800 italic font-bold">{{ globalSpeed }}</span
-            ><span v-show="uploadIsDone">, All done.</span>
+            ><span v-show="uploadIsDone">, {{ t('upload.allDone') }}</span>
           </div>
         </div>
 
@@ -88,7 +88,7 @@
             style="border: none"
             @click="clearUploadedFiles"
           >
-            Dismiss
+            {{ t('upload.dismiss') }}
           </button>
         </div>
         <div class="pb-4" v-show="fileList.length > 0 && !uploading">
@@ -101,7 +101,7 @@
               v-model="skipFilesWithTheSameName"
             />
             <label for="skip_uploading_if_filename_is_the_same" class="text-xs"
-              >Skip uploading files with the same name</label
+              >{{ t('upload.skipSameName') }}</label
             >
           </div>
           <div class="flex mb-2">
@@ -112,7 +112,7 @@
               v-model="renameFileWithRandomId"
               id="renameFileWithRandomId"
             />
-            <label class="text-xs" for="renameFileWithRandomId">Rename each file with a random ID</label>
+            <label class="text-xs" for="renameFileWithRandomId">{{ t('upload.renameRandom') }}</label>
           </div>
           <div class="flex">
             <input
@@ -122,7 +122,7 @@
               v-model="compressImagesBeforeUploading"
               id="compressImagesBeforeUploading"
             />
-            <label class="text-xs" for="compressImagesBeforeUploading"> Compress images before uploading </label>
+            <label class="text-xs" for="compressImagesBeforeUploading"> {{ t('upload.compressImages') }} </label>
           </div>
           <div v-if="compressImagesBeforeUploading" class="text-xs pt-4 pl-2">
             <div>
@@ -293,12 +293,14 @@ import axios from 'axios'
 import { useStatusStore } from '../store/status'
 import { nanoid } from 'nanoid'
 import Compressor from 'compressorjs'
+import { useI18n } from '../i18n'
 
+const { t } = useI18n()
 let statusStore = useStatusStore()
 
 let browserSupportsDirectoryUpload = ref(true)
 let fileList = ref([])
-let chooseFileBtnText = ref('Choose Files')
+let chooseFileBtnText = ref(t('upload.addMore'))
 let allFileSize = ref(0)
 let progressMap = ref({})
 let statusMap = ref({})

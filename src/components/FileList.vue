@@ -1,7 +1,7 @@
 <template>
   <form action="javascript:">
     <div class="font-bold italic">
-      <div>File List</div>
+      <div>{{ t('fileList.title') }}</div>
     </div>
 
     <div class="mt-4 mb-4 flex items-center flex-wrap space-x-2">
@@ -13,7 +13,7 @@
         :aria-busy="loading"
         :disabled="loading || !endPoint"
       >
-        Refresh
+        {{ t('fileList.refresh') }}
       </button>
       <button
         class="text-xs inline-block w-auto outline mb-0"
@@ -21,7 +21,7 @@
         @click="toggleSelectMode"
         :disabled="fileList.length === 0 || loading"
       >
-        {{ selectMode && fileList.length ? 'Quit Selection Mode' : 'Selection Mode' }}
+        {{ selectMode && fileList.length ? t('fileList.quitSelection') : t('fileList.selectionMode') }}
       </button>
 
       <div v-show="selectMode" class="w-full flex space-x-2 mt-2">
@@ -31,7 +31,7 @@
           style="padding: 0.3rem 0.5rem"
           @click="deleteSelectedFiles"
         >
-          Delete Selected
+          {{ t('fileList.deleteSelected') }}
         </button>
         <button
           :disabled="selectedFiles.length === 0"
@@ -46,7 +46,7 @@
 
     <div>
       <div class="text-xs" v-show="!loading && fileList.length === 0 && !loadDataErrorText">
-        Seems like we got nothing here.
+        {{ t('fileList.empty') }}
       </div>
       <div class="text-red-500 text-xs" v-show="loadDataErrorText">
         {{ loadDataErrorText }}
@@ -54,9 +54,7 @@
         <pre class="mt-2"><code class="text-xs">{{ loadDataErrorStack }}</code></pre>
       </div>
       <div class="text-xs mb-4" v-show="fileList.length > 0">
-        <span class="font-bold">{{ globalCursor ? 'More than' : '' }}</span> {{ fileList.length }} file{{
-          fileList.length === 1 ? '' : 's'
-        }}, {{ parseByteSize(allFileSize) }} total.
+        <span class="font-bold">{{ globalCursor ? t('fileList.moreThan') : '' }}</span> {{ fileList.length }} {{ t('fileList.files') }}, {{ parseByteSize(allFileSize) }} {{ t('fileList.total') }}.
         <div class="inline-flex space-x-2">
           <button
             class="inline outline px-2 py-1 text-xs w-auto mb-0"
@@ -65,19 +63,19 @@
             :aria-busy="loading"
             :disabled="loading"
           >
-            Load next page
+            {{ t('fileList.loadMore') }}
           </button>
         </div>
       </div>
 
       <div class="text-xs mb-2" v-show="fileList.length > 0">
-        Sort by
+        {{ t('fileList.sortBy') }}
         <select class="text-xs inline-block w-[10rem] mb-0" v-model="sort">
-          <option value="0">Default</option>
-          <option value="1">Date(newest first)</option>
-          <option value="2">Date(oldest first)</option>
-          <option value="3">Size(largest first)</option>
-          <option value="4">Size(smallest first)</option>
+          <option value="0">{{ t('fileList.default') }}</option>
+          <option value="1">{{ t('fileList.dateNewest') }}</option>
+          <option value="2">{{ t('fileList.dateOldest') }}</option>
+          <option value="3">{{ t('fileList.sizeLargest') }}</option>
+          <option value="4">{{ t('fileList.sizeSmallest') }}</option>
         </select>
       </div>
 
@@ -90,7 +88,7 @@
             class="mr-2"
             :disabled="reconstructing"
           />
-          Folder Structure
+          {{ t('fileList.folderStructure') }}
         </label>
       </div>
 
@@ -125,7 +123,7 @@
                   :id="folder.name"
                   @change="handleFolderSelect(folder.name)"
                 />
-                Select All</label
+                {{ t('fileList.selectAll') }}</label
               >
             </div>
             <div
@@ -194,7 +192,9 @@ import axios from 'axios'
 import { useStatusStore } from '../store/status'
 import { storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
+import { useI18n } from '../i18n'
 
+const { t } = useI18n()
 let sort = ref('0')
 
 onMounted(() => {
