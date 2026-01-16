@@ -2,19 +2,19 @@
   <div>
     <details :open="panelOpen === '1'" id="panel">
       <summary class='font-bold italic'>
-        Endpoints
+        {{ t('endpoints.title') }}
       </summary>
       <article>
         <form action="javascript:" class="mb-0">
           <div class="pb-2 text-xs opacity-80">
-            <span v-show="endPointList.length === 1">You have 1 endpoint, and it is selected.</span>
+            <span v-show="endPointList.length === 1">{{ t('endpoints.hasOne') }}</span>
             <span v-show="endPointList.length > 1">
-            Choose between different endpoints, {{ 'you have ' + endPointList.length + ' endpoints' }}
-          </span>
+              {{ t('endpoints.hasMultiple', { count: endPointList.length }) }}
+            </span>
           </div>
           <div v-show="endPointList.length === 0" class="text-sm">
-            You need Cloudflare Workers to upload files to Cloudflare R2. Have a look at the
-            <a href="/setup-guide/" class="underline">setup guide</a>.
+            {{ t('endpoints.needWorker') }}
+            <a href="/setup-guide/" class="underline">{{ t('endpoints.setupGuide') }}</a>.
           </div>
           <div v-for="item in endPointList" class="flex mt-2">
             <input type="radio" name="current_endpoint" :id="item.endPoint" :data-id="item.endPoint" :checked="item.endPoint === endPoint"
@@ -24,10 +24,10 @@
             <button class="shrink-0 bg-transparent w-auto outline inline-block text-xs text-emerald-500 mb-0 mr-2"
                     style="padding: 0; border: 0" @click="editThisEndpoint(item.endPoint)"
                     :disabled="editingEndpoint !== item.endPoint && editingEndpoint !== ''">
-              {{ editingEndpoint === item.endPoint ? 'Cancel' : 'Edit' }}
+              {{ editingEndpoint === item.endPoint ? t('endpoints.cancel') : t('endpoints.edit') }}
             </button>
             <button class="shrink-0 bg-transparent w-auto outline inline-block text-xs text-red-500 mb-0"
-                    style="padding: 0; border: 0" @click="deleteThisEndPoint(item.endPoint)" :disabled="editingEndpoint !== ''">Delete
+                    style="padding: 0; border: 0" @click="deleteThisEndPoint(item.endPoint)" :disabled="editingEndpoint !== ''">{{ t('endpoints.delete') }}
             </button>
           </div>
         </form>
@@ -38,21 +38,21 @@
             {{ endpointActionText }} &nbsp;
           </div>
           <div>
-            <label for="" class="text-sm">Workers Endpoint</label>
-            <input type="text" placeholder="https://..." v-model="newEndpoint" class="text-xs" required>
+            <label for="endpoint_url" class="text-sm">{{ t('endpoints.workerEndpoint') }}</label>
+            <input type="text" placeholder="https://..." v-model="newEndpoint" class="text-xs" required id="endpoint_url">
           </div>
           <div>
-            <label for="api_key" class="text-sm">Workers Endpoint API Key</label>
-            <input type="password" placeholder="treat it like your browser history" v-model="newApiKey" required
+            <label for="api_key" class="text-sm">{{ t('endpoints.apiKey') }}</label>
+            <input type="password" :placeholder="t('endpoints.apiKeyPlaceholder')" v-model="newApiKey" required
                    id="api_key" class="text-xs">
           </div>
           <div>
-            <label for="custom_domain" class="text-sm">Custom Domain (Optional)</label>
+            <label for="custom_domain" class="text-sm">{{ t('endpoints.customDomain') }}</label>
             <input type="text" placeholder="no need for the https:// prefix" v-model="newCustomDomain"
                    id="custom_domain"
                    style="margin-bottom: .5rem" class="text-xs">
             <div class="opacity-70 text-xs leading-4 mb-8">
-              Use your own domain name to access the files instead of <code
+              {{ t('endpoints.customDomainHint') }} <code
               class="text-black dark:text-white">&lt;bucket&gt;.&lt;user&gt;.workers.dev</code>.
             </div>
           </div>
@@ -78,7 +78,9 @@ import {useStatusStore} from '../store/status'
 import SyncEndpoints from './syncEndpoints.vue'
 import { storeToRefs } from 'pinia'
 import {animateText} from '../utils/animateText.js'
+import { useI18n } from '../i18n'
 
+const { t } = useI18n()
 let statusStore = useStatusStore()
 let { endPointPulled } = storeToRefs(statusStore)
 
@@ -123,6 +125,18 @@ let editThisEndpoint = function (endpoint) {
 
 const restoreEndPointList = function () {
   endPointList.value = JSON.parse(localStorage.getItem('endPointList')) || []
+  
+  // If no endpoints exist and VITE_WORKER_URL is set at build time, pre-fill the URL field
+  // Note: API key is NEVER embedded in client code for security reasons
+  // Users must enter the API key manually
+  if (endPointList.value.length === 0 && import.meta.env.VITE_WORKER_URL) {
+    let defaultUrl = import.meta.env.VITE_WORKER_URL
+    if (defaultUrl[defaultUrl.length - 1] !== '/') {
+      defaultUrl += '/'
+    }
+    newEndpoint.value = defaultUrl
+    console.log('[R2 Uploader] Default Worker URL pre-filled from VITE_WORKER_URL')
+  }
 }
 
 const deleteThisEndPoint = function (endpoint) {

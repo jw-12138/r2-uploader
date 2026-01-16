@@ -1,0 +1,32 @@
+# R2 Uploader Worker Configuration
+# Deploy: cd worker && wrangler deploy
+
+name = "r2-uploader-worker"
+main = "src/index.js"
+compatibility_date = "2026-01-15"
+
+# ============================================================
+# R2 Bucket Binding
+# ============================================================
+# IMPORTANT: Change `bucket_name` to your actual R2 bucket name.
+# The binding name `R2_BUCKET` must stay the same (code depends on it).
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "cyber-dev-web-upload"
+
+# ============================================================
+# Environment Variables (non-sensitive)
+# ============================================================
+# Set PRIVATE_BUCKET to "true" to require x-api-key for ALL requests
+# (including GET/download). By default, only write operations require auth.
+[vars]
+PRIVATE_BUCKET = "true"
+
+# ============================================================
+# Secrets (sensitive - set via `wrangler secret put`)
+# ============================================================
+# AUTH_KEY_SECRET: The API key that clients must send in x-api-key header.
+#                  Set it with: cd worker && wrangler secret put AUTH_KEY_SECRET
+#
+# DO NOT put secrets in this file! Use wrangler secret put instead.
+
