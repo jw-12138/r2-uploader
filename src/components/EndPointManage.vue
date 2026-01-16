@@ -124,15 +124,43 @@ let editThisEndpoint = function (endpoint) {
 const restoreEndPointList = function () {
   endPointList.value = JSON.parse(localStorage.getItem('endPointList')) || []
   
-  // If no endpoints exist and VITE_WORKER_URL is set at build time, pre-populate
-  if (endPointList.value.length === 0 && import.meta.env.VITE_WORKER_URL) {
+  // If no endpoints exist and VITE_WORKER_URL is set at build time, auto-configure
+  // This is safe when the page is protected by Cloudflare Access
+  if (endPointList.value.length === 0 && import.meta.env.VITE_WORKER_URL && import.meta.env.VITE_API_KEY) {
+    let defaultUrl = import.meta.env.VITE_WORKER_URL
+    if (defaultUrl[defaultUrl.length - 1] !== '/') {
+      defaultUrl += '/'
+    }
+    
+    // Auto-save the pre-configured endpoint
+    const preConfiguredEndpoint = {
+      endPoint: defaultUrl,
+      apiKey: import.meta.env.VITE_API_KEY,
+      customDomain: import.meta.env.VITE_CUSTOM_DOMAIN || ''
+    }
+    
+    endPointList.value.push(preConfiguredEndpoint)
+    localStorage.setItem('endPointList', JSON.stringify(endPointList.value))
+    
+    // Set as current endpoint
+    localStorage.setItem('endPoint', preConfiguredEndpoint.endPoint)
+    localStorage.setItem('apiKey', preConfiguredEndpoint.apiKey)
+    localStorage.setItem('customDomain', preConfiguredEndpoint.customDomain)
+    
+    endPoint.value = preConfiguredEndpoint.endPoint
+    apiKey.value = preConfiguredEndpoint.apiKey
+    customDomain.value = preConfiguredEndpoint.customDomain
+    
+    statusStore.endPointUpdated += 1
+    console.log('[R2 Uploader] Auto-configured endpoint from environment variables')
+  } else if (endPointList.value.length === 0 && import.meta.env.VITE_WORKER_URL) {
+    // Only URL provided, pre-fill but require manual API key entry
     let defaultUrl = import.meta.env.VITE_WORKER_URL
     if (defaultUrl[defaultUrl.length - 1] !== '/') {
       defaultUrl += '/'
     }
     newEndpoint.value = defaultUrl
-    // User still needs to enter API key manually for security
-    console.log('[R2 Uploader] Default Worker URL loaded from VITE_WORKER_URL:', defaultUrl)
+    console.log('[R2 Uploader] Default Worker URL loaded, API key required')
   }
 }
 
