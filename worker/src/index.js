@@ -245,8 +245,8 @@ export default {
       // Not found
       return jsonResponse({ error: 'Not found' }, 404);
     } catch (err) {
-      console.error('Worker error:', err);
-      return jsonResponse({ error: err.message || 'Internal error' }, 500);
+      console.error('Worker error:', err.stack || err);
+      return jsonResponse({ error: 'Internal Server Error' }, 500);
     }
   },
 };
