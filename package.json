@@ -8,8 +8,12 @@
     "dev": "vite",
     "build:setup": "cp README.md public/setup-guide/index.md; bun run public/setup-guide/gen_markdown.js",
     "build": "bun run build:setup; vite build",
+    "build:web": "bun run build",
     "preview": "vite preview",
     "deploy": "bun run build:setup; vercel --prod",
+    "deploy:worker": "cd worker && npx wrangler deploy",
+    "deploy:web": "bun run build:web && npx wrangler pages deploy dist --project-name r2-uploader",
+    "deploy:all": "bun run deploy:worker && bun run deploy:web",
     "clean": "rm -rf dist"
   },
   "dependencies": {

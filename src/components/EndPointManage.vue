@@ -123,6 +123,17 @@ let editThisEndpoint = function (endpoint) {
 
 const restoreEndPointList = function () {
   endPointList.value = JSON.parse(localStorage.getItem('endPointList')) || []
+  
+  // If no endpoints exist and VITE_WORKER_URL is set at build time, pre-populate
+  if (endPointList.value.length === 0 && import.meta.env.VITE_WORKER_URL) {
+    let defaultUrl = import.meta.env.VITE_WORKER_URL
+    if (defaultUrl[defaultUrl.length - 1] !== '/') {
+      defaultUrl += '/'
+    }
+    newEndpoint.value = defaultUrl
+    // User still needs to enter API key manually for security
+    console.log('[R2 Uploader] Default Worker URL loaded from VITE_WORKER_URL:', defaultUrl)
+  }
 }
 
 const deleteThisEndPoint = function (endpoint) {
